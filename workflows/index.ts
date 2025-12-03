@@ -12,7 +12,7 @@ import { supportTicket } from "./support-ticket";
 
 export type WorkflowEntry = {
 	name: string;
-	trigger: () => Promise<Run>;
+	trigger: () => Promise<Run<unknown>>;
 };
 
 // Add new workflows here
