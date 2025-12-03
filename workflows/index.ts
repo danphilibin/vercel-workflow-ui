@@ -6,13 +6,13 @@
  * in the trigger route and registration script.
  */
 
-import { start } from "workflow/api";
+import { start, type Run } from "workflow/api";
 import { spikeWorkflow } from "./hello-relay";
-import { handleUserSignup } from "./user-signup";
+import { supportTicket } from "./support-ticket";
 
 export type WorkflowEntry = {
 	name: string;
-	trigger: () => Promise<unknown>;
+	trigger: () => Promise<Run>;
 };
 
 // Add new workflows here
@@ -22,8 +22,8 @@ export const WORKFLOWS: WorkflowEntry[] = [
 		trigger: () => start(spikeWorkflow),
 	},
 	{
-		name: "user-signup",
-		trigger: () => start(handleUserSignup),
+		name: "support-ticket",
+		trigger: () => start(supportTicket),
 	},
 ];
 

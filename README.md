@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Relay
 
-## Getting Started
+**UI layer for durable workflows.** Relay lets workflows pause for human input, collect data in a browser, and resume execution seamlessly.
 
-First, run the development server:
+Built on [Vercel Workflows](https://vercel.com/docs/workflow-kit).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## What It Does
+
+```typescript
+const { name, email } = await waitForInput("user-info", {
+  name: { type: "text", label: "Your name" },
+  email: { type: "text", label: "Email address" },
+});
+
+await output(`Thanks, ${name}!`);
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Workflows **stream** output to the browser in real-time
+- `waitForInput()` **pauses** the workflow until the user submits
+- No polling, no WebSockets—just HTTP streaming + webhooks
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quick Start
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Install dependencies
+bun install
 
-## Learn More
+# Start dev server
+npx vercel dev
 
-To learn more about Next.js, take a look at the following resources:
+# Open browser
+open http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Click a workflow in the sidebar to run it. Messages appear as they're streamed, forms render when input is needed, and the workflow resumes when you submit.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+├── app/
+│   ├── page.tsx              # UI (sidebar + messages + forms)
+│   └── api/run/route.ts      # Start workflow, return stream
+├── lib/
+│   ├── relay.ts              # SDK: output() + waitForInput()
+│   └── relay-types.ts        # Shared types
+├── workflows/
+│   ├── index.ts              # Workflow registry
+│   └── hello-relay.ts        # Example workflow
+└── docs/
+    └── ABOUT.md              # Detailed architecture docs
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Adding a Workflow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Create `workflows/my-workflow.ts`:
+
+```typescript
+import { output, waitForInput } from "@/lib/relay";
+
+export async function myWorkflow() {
+  "use workflow";
+  
+  await output("Hello!");
+  const name = await waitForInput("What's your name?");
+  await output(`Nice to meet you, ${name}!`);
+}
+```
+
+2. Register in `workflows/index.ts`:
+
+```typescript
+import { myWorkflow } from "./my-workflow";
+
+export const WORKFLOWS = [
+  // ...existing
+  { name: "my-workflow", trigger: () => start(myWorkflow) },
+];
+```
+
+3. Add to `workflows/manifest.ts`:
+
+```typescript
+export const WORKFLOW_NAMES = [
+  // ...existing
+  "my-workflow",
+] as const;
+```
+
+## Docs
+
+See [docs/ABOUT.md](docs/ABOUT.md) for detailed architecture, how the SDK works, and production considerations.

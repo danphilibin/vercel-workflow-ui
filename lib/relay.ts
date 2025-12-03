@@ -1,12 +1,11 @@
 /**
- * Relay SDK (spike version)
+ * Relay SDK
  *
- * Provides step functions for interacting with the Relay UI.
+ * Streams output and input requests directly to the client via Vercel's
+ * workflow streaming. No intermediate server needed.
  */
 
-import { createWebhook } from "workflow";
-
-const RELAY_SERVER = process.env.RELAY_SERVER || "http://localhost:3333";
+import { createWebhook, getWritable } from "workflow";
 
 /**
  * Input field schema
@@ -17,21 +16,19 @@ type InputField = TextInput | CheckboxInput;
 
 type InputSchema = Record<string, InputField>;
 
-// Infer return type based on input type
-type InputValue<T extends InputField> = T extends CheckboxInput
-	? boolean
-	: string;
+// Re-export types for server-side use
+export type { StreamMessage } from "./relay-types";
+import type { StreamMessage } from "./relay-types";
 
 /**
  * Send output text to the Relay UI
  */
 export async function output(content: string) {
 	"use step";
-	await fetch(`${RELAY_SERVER}/message`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ type: "output", content }),
-	});
+	const writable = getWritable<StreamMessage>();
+	const writer = writable.getWriter();
+	await writer.write({ type: "output", content });
+	writer.releaseLock();
 }
 
 /**
@@ -61,7 +58,7 @@ export async function waitForInput<T extends InputSchema>(
 export async function waitForInput(
 	stepIdOrPrompt: string,
 	promptOrSchema?: string | InputSchema,
-): Promise<string | Record<string, string>> {
+): Promise<string | Record<string, string | boolean>> {
 	// Handle single-arg case: waitForInput("prompt")
 	let stepId: string;
 	let schemaOrPrompt: string | InputSchema;
@@ -88,16 +85,15 @@ export async function waitForInput(
 		label: field.label,
 	}));
 
-	// Create webhook - let Vercel generate unique token per run
-	// (custom tokens are for long-running workflows that receive multiple events)
+	// Create webhook - Vercel generates unique token per run
 	const webhook = createWebhook({
 		respondWith: Response.json({ received: true }),
 	});
 
-	// Send input request to UI
-	await sendInputRequest(stepId, inputs, webhook.url);
+	// Stream input request to client (includes webhookUrl for submission)
+	await streamInputRequest(stepId, inputs, webhook.url);
 
-	// Wait for response
+	// Wait for response via webhook
 	const request = await webhook;
 	const { values } = (await request.json()) as {
 		values: Record<string, string | boolean>;
@@ -120,16 +116,15 @@ function slugify(text: string): string {
 		.slice(0, 50);
 }
 
-// Internal: send input request to UI (must be a step for durability)
-async function sendInputRequest(
+// Internal: stream input request to client
+async function streamInputRequest(
 	stepId: string,
 	inputs: Array<{ name: string; type: string; label: string }>,
 	webhookUrl: string,
 ) {
 	"use step";
-	await fetch(`${RELAY_SERVER}/message`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ type: "input", stepId, inputs, webhookUrl }),
-	});
+	const writable = getWritable<StreamMessage>();
+	const writer = writable.getWriter();
+	await writer.write({ type: "input", stepId, inputs, webhookUrl });
+	writer.releaseLock();
 }
