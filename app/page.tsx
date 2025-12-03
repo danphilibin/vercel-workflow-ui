@@ -24,17 +24,18 @@ export default function Home() {
 		abortRef.current?.abort();
 		abortRef.current = new AbortController();
 
-		setMessages([{ type: "system", content: `Running ${name}` }]);
+		setMessages([{ type: "system", content: `Starting ${name}...` }]);
 
 		try {
-			const response = await fetch("/api/run", {
+			// Step 1: Trigger the workflow and get runId
+			const triggerResponse = await fetch("/api/run", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ workflow: name }),
 				signal: abortRef.current.signal,
 			});
 
-			if (!response.ok || !response.body) {
+			if (!triggerResponse.ok) {
 				setMessages((m) => [
 					...m,
 					{ type: "system", content: `Failed to start workflow` },
@@ -42,7 +43,26 @@ export default function Home() {
 				return;
 			}
 
-			const reader = response.body.getReader();
+			const { runId } = (await triggerResponse.json()) as { runId: string };
+			setMessages((m) => [
+				...m,
+				{ type: "system", content: `Running...` },
+			]);
+
+			// Step 2: Connect to the stream endpoint
+			const streamResponse = await fetch(`/api/stream/${runId}`, {
+				signal: abortRef.current.signal,
+			});
+
+			if (!streamResponse.ok || !streamResponse.body) {
+				setMessages((m) => [
+					...m,
+					{ type: "system", content: `Failed to connect to stream` },
+				]);
+				return;
+			}
+
+			const reader = streamResponse.body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = "";
 

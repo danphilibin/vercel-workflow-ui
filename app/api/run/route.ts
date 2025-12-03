@@ -1,10 +1,12 @@
 /**
- * Start a workflow and stream its output to the client
+ * Start a workflow
  *
  * POST /api/run
  * Body: { workflow: "hello-relay" }
  *
- * Returns: ReadableStream of StreamMessage objects (newline-delimited JSON)
+ * Returns: { runId: string }
+ *
+ * To stream the output, use GET /api/stream/:runId
  */
 
 import { getWorkflow } from "@/workflows";
@@ -23,21 +25,8 @@ export async function POST(request: Request) {
 
 	const run = await workflow.trigger();
 
-	// Transform object stream to newline-delimited JSON strings
-	const encoder = new TextEncoder();
-	const jsonStream = run.readable.pipeThrough(
-		new TransformStream({
-			transform(chunk, controller) {
-				const json = JSON.stringify(chunk) + "\n";
-				controller.enqueue(encoder.encode(json));
-			},
-		}),
-	);
+	console.log(`✅ Workflow started with runId: ${run.runId}`);
 
-	return new Response(jsonStream, {
-		headers: {
-			"Content-Type": "application/x-ndjson",
-			"Transfer-Encoding": "chunked",
-		},
-	});
+	// Return runId - client will connect to /api/stream/:runId for output
+	return Response.json({ runId: run.runId });
 }
