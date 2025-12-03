@@ -41,6 +41,3 @@ export async function registerWorkflows() {
 
 	console.log("\n✅ Done!");
 }
-
-// Run directly if executed as a script
-registerWorkflows();
