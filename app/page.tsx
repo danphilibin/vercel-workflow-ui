@@ -110,10 +110,11 @@ export default function Home() {
 		);
 
 		try {
-			await fetch(webhookUrl, {
+			// Proxy through our own endpoint to avoid deployment URL issues
+			await fetch("/api/submit", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ values }),
+				body: JSON.stringify({ webhookUrl, values }),
 			});
 		} catch (err) {
 			console.error("Failed to submit:", err);
