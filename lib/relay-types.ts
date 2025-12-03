@@ -11,6 +11,5 @@ export type StreamMessage =
 			type: "input";
 			stepId: string;
 			inputs: Array<{ name: string; type: string; label: string }>;
-			webhookUrl: string;
+			token: string;
 	  };
-

@@ -11,7 +11,7 @@ type Message =
 			type: "input";
 			stepId: string;
 			inputs: Array<{ name: string; type: string; label: string }>;
-			webhookUrl: string;
+			token: string;
 			submitted?: boolean;
 			values?: Record<string, string | boolean>;
 	  };
@@ -98,7 +98,7 @@ export default function Home() {
 
 	async function submitInput(
 		stepId: string,
-		webhookUrl: string,
+		token: string,
 		values: Record<string, string | boolean>,
 	) {
 		setMessages((m) =>
@@ -110,11 +110,10 @@ export default function Home() {
 		);
 
 		try {
-			// Proxy through our own endpoint to avoid deployment URL issues
 			await fetch("/api/submit", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ webhookUrl, values }),
+				body: JSON.stringify({ token, values }),
 			});
 		} catch (err) {
 			console.error("Failed to submit:", err);
@@ -152,7 +151,7 @@ export default function Home() {
 							message={msg}
 							onSubmit={(values) => {
 								if (msg.type === "input") {
-									submitInput(msg.stepId, msg.webhookUrl, values);
+									submitInput(msg.stepId, msg.token, values);
 								}
 							}}
 						/>

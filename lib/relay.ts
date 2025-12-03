@@ -2,10 +2,11 @@
  * Relay SDK
  *
  * Streams output and input requests directly to the client via Vercel's
- * workflow streaming. No intermediate server needed.
+ * workflow streaming. Uses defineHook for type-safe input handling.
  */
 
-import { createWebhook, getWritable } from "workflow";
+import { getWritable } from "workflow";
+import { inputHook } from "./input-hook";
 
 /**
  * Input field schema
@@ -85,19 +86,19 @@ export async function waitForInput(
 		label: field.label,
 	}));
 
-	// Create webhook - Vercel generates unique token per run
-	const webhook = createWebhook({
-		respondWith: Response.json({ received: true }),
-	});
+	// Generate a unique token for this input request
+	// Combines stepId with timestamp and random string for uniqueness across runs
+	const token = `${stepId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-	// Stream input request to client (includes webhookUrl for submission)
-	await streamInputRequest(stepId, inputs, webhook.url);
+	// Create hook with the unique token (workflow context, no "use step")
+	const hook = inputHook.create({ token });
 
-	// Wait for response via webhook
-	const request = await webhook;
-	const { values } = (await request.json()) as {
-		values: Record<string, string | boolean>;
-	};
+	// Stream input request to client (includes token for submission)
+	await streamInputRequest(stepId, inputs, token);
+
+	// Wait for response via hook
+	const result = await hook;
+	const values = result.values as Record<string, string | boolean>;
 
 	// For single-input shorthand, return just the value
 	if (typeof schemaOrPrompt === "string") {
@@ -120,11 +121,11 @@ function slugify(text: string): string {
 async function streamInputRequest(
 	stepId: string,
 	inputs: Array<{ name: string; type: string; label: string }>,
-	webhookUrl: string,
+	token: string,
 ) {
 	"use step";
 	const writable = getWritable<StreamMessage>();
 	const writer = writable.getWriter();
-	await writer.write({ type: "input", stepId, inputs, webhookUrl });
+	await writer.write({ type: "input", stepId, inputs, token });
 	writer.releaseLock();
 }
