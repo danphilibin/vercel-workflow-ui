@@ -7,15 +7,19 @@
  * - loading() with progress and complete callbacks
  */
 
-import { loading, output, waitForInput } from "@/lib/relay";
 import { sleep } from "workflow";
+import { loading, output, waitForInput } from "@/lib/relay";
+import type { WorkflowMeta } from "@/lib/relay/meta";
 
-export async function supportTicket() {
+export const meta: WorkflowMeta = {
+	title: "Support Ticket",
+	description: "Create a support ticket with guided troubleshooting",
+	access: ["support", "admin"],
+};
+
+export async function workflow() {
 	"use workflow";
 
-	await output("👋 Welcome to Acme Support");
-
-	// Collect email and look up account
 	const email = await waitForInput("What's the email on your account?");
 
 	await loading("Looking up your account...", async (_, complete) => {
@@ -23,7 +27,6 @@ export async function supportTicket() {
 		complete(`Found account: ${email}`);
 	});
 
-	// Collect issue details
 	const { category, description } = await waitForInput("issue-details", {
 		category: {
 			type: "text",
@@ -34,7 +37,6 @@ export async function supportTicket() {
 
 	await output(`Got it — a ${category} issue.`);
 
-	// Search knowledge base
 	const kbArticles = [
 		"connection-troubleshooting",
 		"billing-faq",
@@ -55,7 +57,6 @@ export async function supportTicket() {
 			"I couldn't find an existing solution. Let's create a ticket for our team.",
 		);
 
-		// Collect priority and preferences
 		const { priority, urgent, emailUpdates } = await waitForInput(
 			"ticket-options",
 			{

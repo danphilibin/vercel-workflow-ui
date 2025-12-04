@@ -22,42 +22,26 @@ await output(`Thanks, ${name}!`);
 ## Quick Start
 
 ```bash
-# Install dependencies
 bun install
-
-# Start dev server
-npx vercel dev
-
-# Open browser
+bun run dev
 open http://localhost:3000
-```
-
-Click a workflow in the sidebar to run it. Messages appear as they're streamed, forms render when input is needed, and the workflow resumes when you submit.
-
-## Project Structure
-
-```
-├── app/
-│   ├── page.tsx              # UI (sidebar + messages + forms)
-│   └── api/run/route.ts      # Start workflow, return stream
-├── lib/
-│   ├── relay.ts              # SDK: output() + waitForInput()
-│   └── relay-types.ts        # Shared types
-├── workflows/
-│   ├── index.ts              # Workflow registry
-│   └── hello-relay.ts        # Example workflow
-└── docs/
-    └── ABOUT.md              # Detailed architecture docs
 ```
 
 ## Adding a Workflow
 
-1. Create `workflows/my-workflow.ts`:
+Create a file in `workflows/`:
 
 ```typescript
+// workflows/my-workflow.ts
 import { output, waitForInput } from "@/lib/relay";
+import type { WorkflowMeta } from "@/lib/relay/meta";
 
-export async function myWorkflow() {
+export const meta: WorkflowMeta = {
+  title: "My Workflow",
+  description: "Does something useful",
+};
+
+export async function workflow() {
   "use workflow";
   
   await output("Hello!");
@@ -66,26 +50,10 @@ export async function myWorkflow() {
 }
 ```
 
-2. Register in `workflows/index.ts`:
+That's it—the registry auto-generates on save.
 
-```typescript
-import { myWorkflow } from "./my-workflow";
-
-export const WORKFLOWS = [
-  // ...existing
-  { name: "my-workflow", trigger: () => start(myWorkflow) },
-];
-```
-
-3. Add to `workflows/manifest.ts`:
-
-```typescript
-export const WORKFLOW_NAMES = [
-  // ...existing
-  "my-workflow",
-] as const;
-```
+**Nested routes:** `workflows/users/create.ts` → `/workflow/users/create`
 
 ## Docs
 
-See [docs/ABOUT.md](docs/ABOUT.md) for detailed architecture, how the SDK works, and production considerations.
+See [docs/ABOUT.md](docs/ABOUT.md) for architecture details and production considerations.

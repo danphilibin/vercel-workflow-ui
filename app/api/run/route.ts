@@ -9,21 +9,24 @@
  * To stream the output, use GET /api/stream/:runId
  */
 
-import { getWorkflow } from "@/workflows";
+import { start } from "workflow/api";
+import { getWorkflow } from "@/generated/workflows";
 
 export async function POST(request: Request) {
-	const { workflow: workflowName } = (await request.json()) as {
+	const { workflow: workflowSlug } = (await request.json()) as {
 		workflow: string;
 	};
 
-	const workflow = getWorkflow(workflowName);
-	if (!workflow) {
+	const entry = getWorkflow(workflowSlug);
+	if (!entry) {
 		return Response.json({ error: "Workflow not found" }, { status: 404 });
 	}
 
-	console.log(`🚀 Starting workflow: ${workflowName}`);
+	console.log(`🚀 Starting workflow: ${entry.title} (${workflowSlug})`);
 
-	const run = await workflow.trigger();
+	// Dynamic import and start
+	const mod = await entry.import();
+	const run = await start(mod.workflow);
 
 	console.log(`✅ Workflow started with runId: ${run.runId}`);
 

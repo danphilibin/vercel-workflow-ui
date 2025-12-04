@@ -3,8 +3,9 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
+		"generate": "bunx tsx scripts/generate-workflows.ts",
+		"dev": "concurrently \"bun run scripts/generate-workflows.ts --watch\" \"next dev\"",
+		"build": "bunx tsx scripts/generate-workflows.ts && next build",
 		"start": "next start",
 		"format": "biome format --write",
 		"lint": "biome lint --fix"
@@ -22,6 +23,7 @@
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
+		"concurrently": "^9.1.2",
 		"eslint": "^9",
 		"eslint-config-next": "16.0.6",
 		"tailwindcss": "^4",
