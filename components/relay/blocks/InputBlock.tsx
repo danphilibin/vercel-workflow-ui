@@ -106,49 +106,6 @@ export function InputBlock({
 					Continue
 				</button>
 			</form>
-
-			<style jsx>{`
-				.checkbox-custom {
-					appearance: none;
-					-webkit-appearance: none;
-					width: 18px;
-					height: 18px;
-					background: black;
-					border: 1px solid #333;
-					border-radius: 4px;
-					cursor: pointer;
-					position: relative;
-					transition: background 0.15s ease, border-color 0.15s ease;
-				}
-				.checkbox-custom:checked {
-					background: white;
-					border-color: white;
-				}
-				.checkbox-custom:checked::after {
-					content: "";
-					position: absolute;
-					left: 5px;
-					top: 2px;
-					width: 5px;
-					height: 10px;
-					border: solid black;
-					border-width: 0 2px 2px 0;
-					transform: rotate(45deg);
-				}
-				.checkbox-custom:focus {
-					outline: none;
-					border-color: #888;
-					box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
-				}
-				.checkbox-custom:disabled {
-					opacity: 0.5;
-					cursor: default;
-				}
-				.checkbox-custom:disabled:checked {
-					background: #333;
-					border-color: #333;
-				}
-			`}</style>
 		</div>
 	);
 }

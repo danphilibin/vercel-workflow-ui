@@ -46,21 +46,6 @@ export default function Home() {
 					))}
 				</div>
 			</div>
-
-			<style jsx global>{`
-				@keyframes pulse {
-					0%,
-					100% {
-						opacity: 0.4;
-					}
-					50% {
-						opacity: 1;
-					}
-				}
-				.animate-pulse-dot {
-					animation: pulse 1.5s ease-in-out infinite;
-				}
-			`}</style>
 		</div>
 	);
 }
