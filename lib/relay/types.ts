@@ -26,22 +26,24 @@ export type ProgressFn = {
 export type CompleteFn = (message: string) => void;
 
 /**
- * Stream message types
+ * Stream message types (wire format)
  */
+export type OutputMessage = { type: "output"; content: string };
+
+export type InputMessageBase = {
+	type: "input";
+	stepId: string;
+	inputs: Array<{ name: string; type: string; label: string }>;
+	token: string;
+};
+
+export type LoadingStartMessage = { type: "loading-start"; id: string; message: string; total?: number };
+export type LoadingProgressMessage = { type: "loading-progress"; id: string; current?: number; total?: number; message?: string };
+export type LoadingEndMessage = { type: "loading-end"; id: string; message?: string };
+
 export type StreamMessage =
-| { type: "output"; content: string }
-| {
-		type: "input";
-		stepId: string;
-		inputs: Array<{ name: string; type: string; label: string }>;
-		token: string;
-	}
-| { type: "loading-start"; id: string; message: string; total?: number }
-| {
-		type: "loading-progress";
-		id: string;
-		current?: number;
-		total?: number;
-		message?: string;
-	}
-| { type: "loading-end"; id: string; message?: string };
+	| OutputMessage
+	| InputMessageBase
+	| LoadingStartMessage
+	| LoadingProgressMessage
+	| LoadingEndMessage;

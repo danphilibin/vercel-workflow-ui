@@ -1,163 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { WORKFLOW_NAMES } from "@/workflows/manifest";
-import type { StreamMessage } from "@/lib/relay-types";
-
-type Message =
-	| { type: "output"; content: string }
-	| { type: "system"; content: string }
-	| {
-			type: "input";
-			stepId: string;
-			inputs: Array<{ name: string; type: string; label: string }>;
-			token: string;
-			submitted?: boolean;
-			values?: Record<string, string | boolean>;
-	  }
-	| {
-			type: "loading";
-			id: string;
-			message: string;
-			current?: number;
-			total?: number;
-			completed?: boolean;
-	  };
+import {
+	useWorkflowStream,
+	type Message,
+} from "@/components/relay/useWorkflowStream";
 
 export default function Home() {
-	const [messages, setMessages] = useState<Message[]>([]);
-	const abortRef = useRef<AbortController | null>(null);
-
-	async function runWorkflow(name: string) {
-		abortRef.current?.abort();
-		abortRef.current = new AbortController();
-
-		setMessages([{ type: "system", content: `Starting ${name}...` }]);
-
-		try {
-			// Step 1: Trigger the workflow and get runId
-			const triggerResponse = await fetch("/api/run", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ workflow: name }),
-				signal: abortRef.current.signal,
-			});
-
-			if (!triggerResponse.ok) {
-				setMessages((m) => [
-					...m,
-					{ type: "system", content: `Failed to start workflow` },
-				]);
-				return;
-			}
-
-			const { runId } = (await triggerResponse.json()) as { runId: string };
-			setMessages((m) => [
-				...m,
-				{ type: "system", content: `Running...` },
-			]);
-
-			// Step 2: Connect to the stream endpoint
-			const streamResponse = await fetch(`/api/stream/${runId}`, {
-				signal: abortRef.current.signal,
-			});
-
-			if (!streamResponse.ok || !streamResponse.body) {
-				setMessages((m) => [
-					...m,
-					{ type: "system", content: `Failed to connect to stream` },
-				]);
-				return;
-			}
-
-			const reader = streamResponse.body.getReader();
-			const decoder = new TextDecoder();
-			let buffer = "";
-
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-
-				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
-
-				for (const line of lines) {
-					if (!line.trim()) continue;
-					try {
-						const msg = JSON.parse(line) as StreamMessage;
-						
-						// Handle loading state messages specially (update in place)
-						if (msg.type === "loading-start") {
-							setMessages((m) => [
-								...m,
-								{ type: "loading", id: msg.id, message: msg.message, total: msg.total },
-							]);
-						} else if (msg.type === "loading-progress") {
-							setMessages((m) =>
-								m.map((item) =>
-									item.type === "loading" && item.id === msg.id
-										? { ...item, current: msg.current, total: msg.total ?? item.total, message: msg.message ?? item.message }
-										: item
-								)
-							);
-						} else if (msg.type === "loading-end") {
-							if (msg.message) {
-								// Has completion message - mark as completed with new message
-								setMessages((m) =>
-									m.map((item) =>
-										item.type === "loading" && item.id === msg.id
-											? { ...item, message: msg.message!, completed: true }
-											: item
-									)
-								);
-							} else {
-								// No completion message - remove the element
-								setMessages((m) => m.filter((item) => !(item.type === "loading" && item.id === msg.id)));
-							}
-						} else {
-							setMessages((m) => [...m, msg]);
-						}
-					} catch {
-						console.warn("Failed to parse:", line);
-					}
-				}
-			}
-
-			setMessages((m) => [...m, { type: "system", content: "Complete" }]);
-		} catch (err) {
-			if ((err as Error).name !== "AbortError") {
-				setMessages((m) => [
-					...m,
-					{ type: "system", content: `Error: ${(err as Error).message}` },
-				]);
-			}
-		}
-	}
-
-	async function submitInput(
-		stepId: string,
-		token: string,
-		values: Record<string, string | boolean>,
-	) {
-		setMessages((m) =>
-			m.map((msg) =>
-				msg.type === "input" && msg.stepId === stepId
-					? { ...msg, submitted: true, values }
-					: msg,
-			),
-		);
-
-		try {
-			await fetch("/api/submit", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ token, values }),
-			});
-		} catch (err) {
-			console.error("Failed to submit:", err);
-		}
-	}
+	const { messages, runWorkflow, submitInput } = useWorkflowStream();
 
 	return (
 		<div className="flex h-screen bg-black text-[#fafafa] font-sans">
@@ -171,6 +22,7 @@ export default function Home() {
 				<div className="flex-1 overflow-y-auto p-3">
 					{WORKFLOW_NAMES.map((name) => (
 						<button
+							type="button"
 							key={name}
 							onClick={() => runWorkflow(name)}
 							className="w-full text-left px-3.5 py-3 rounded-md mb-1 text-base font-medium hover:bg-[#1a1a1a] transition-colors cursor-pointer"
@@ -276,16 +128,31 @@ function LoadingBlock({
 	total?: number;
 	completed?: boolean;
 }) {
-	const hasProgress = current !== undefined && total !== undefined && !completed;
+	const hasProgress =
+		current !== undefined && total !== undefined && !completed;
 	const percent = hasProgress ? Math.round((current / total) * 100) : null;
 
 	return (
-		<div className={`my-4 p-4 rounded-xl border ${completed ? "border-[#1a3a1a] bg-[#0a150a]" : "border-[#222] bg-[#0a0a0a]"}`}>
+		<div
+			className={`my-4 p-4 rounded-xl border ${completed ? "border-[#1a3a1a] bg-[#0a150a]" : "border-[#222] bg-[#0a0a0a]"}`}
+		>
 			<div className="flex items-center gap-3">
 				<div className="relative w-5 h-5">
 					{completed ? (
-						<svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none">
-							<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="opacity-30" />
+						<svg
+							className="w-5 h-5 text-green-500"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+						>
+							<circle
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								strokeWidth="2"
+								className="opacity-30"
+							/>
 							<path
 								d="M8 12l3 3 5-6"
 								stroke="currentColor"
@@ -295,7 +162,12 @@ function LoadingBlock({
 							/>
 						</svg>
 					) : (
-						<svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+						<svg
+							className="w-5 h-5 animate-spin"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+						>
 							<circle
 								className="opacity-20"
 								cx="12"
@@ -315,7 +187,11 @@ function LoadingBlock({
 					)}
 				</div>
 				<div className="flex-1 min-w-0">
-					<div className={`text-base ${completed ? "text-green-500/90" : "text-[#888]"}`}>{message}</div>
+					<div
+						className={`text-base ${completed ? "text-green-500/90" : "text-[#888]"}`}
+					>
+						{message}
+					</div>
 					{hasProgress && (
 						<div className="mt-2 flex items-center gap-3">
 							<div className="flex-1 h-1.5 bg-[#222] rounded-full overflow-hidden">
@@ -369,14 +245,16 @@ function InputBlock({
 	return (
 		<div
 			className={`my-4 p-5 rounded-xl border ${
-				submitted
-					? "bg-[#0a0a0a] border-[#222]"
-					: "bg-[#111] border-[#222]"
+				submitted ? "bg-[#0a0a0a] border-[#222]" : "bg-[#111] border-[#222]"
 			}`}
 		>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 				{inputs.map((input, index) => (
-					<label key={input.name} className="flex flex-col gap-2">
+					<label
+						key={input.name}
+						className="flex flex-col gap-2"
+						htmlFor={input.name}
+					>
 						{input.type === "checkbox" ? (
 							<div className="flex items-center gap-2.5 cursor-pointer py-1">
 								<input
