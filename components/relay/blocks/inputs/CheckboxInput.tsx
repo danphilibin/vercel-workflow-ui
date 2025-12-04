@@ -23,12 +23,9 @@ export function CheckboxInput({
 				disabled={disabled}
 				className="checkbox-custom"
 			/>
-			<span
-				className={`text-base select-none ${disabled ? "opacity-70" : ""}`}
-			>
+			<span className={`text-base select-none ${disabled ? "opacity-70" : ""}`}>
 				{label}
 			</span>
 		</div>
 	);
 }
-
