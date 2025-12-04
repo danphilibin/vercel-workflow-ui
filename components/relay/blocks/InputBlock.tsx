@@ -41,11 +41,7 @@ export function InputBlock({
 		>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 				{inputs.map((input, index) => (
-					<label
-						key={input.name}
-						className="flex flex-col gap-2"
-						htmlFor={input.name}
-					>
+					<label key={input.name} className="flex flex-col gap-2">
 						{input.type === "checkbox" ? (
 							<div className="flex items-center gap-2.5 cursor-pointer py-1">
 								<input
