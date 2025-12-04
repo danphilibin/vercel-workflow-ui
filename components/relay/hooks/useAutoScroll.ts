@@ -37,6 +37,7 @@ export function useAutoScroll<T>(deps: T[]) {
 	}, [checkIfAtBottom]);
 
 	// Auto-scroll when dependencies change (e.g., new messages)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to scroll to bottom when dependencies change
 	useEffect(() => {
 		if (isAtBottomRef.current) {
 			scrollToBottom();

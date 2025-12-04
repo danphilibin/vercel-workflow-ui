@@ -39,7 +39,8 @@ async function outputMetadata(
 ) {
 	"use step";
 	const title = typeof titleOrData === "string" ? titleOrData : undefined;
-	const data = typeof titleOrData === "string" ? maybeData! : titleOrData;
+	const data =
+		typeof titleOrData === "string" ? (maybeData ?? {}) : titleOrData;
 	await streamWrite({ type: "output", variant: "metadata", title, data });
 }
 

@@ -145,7 +145,7 @@ function extractMeta(content: string): ExtractedMeta {
  * Generate slug to title fallback
  */
 function slugToTitle(slug: string): string {
-	if (!slug) return "Index";
+	// biome-ignore lint/style/noNonNullAssertion: we know the slug is not empty
 	return slug
 		.split("/")
 		.pop()!
@@ -193,7 +193,7 @@ function scanWorkflows(): WorkflowInfo[] {
  */
 function generateManifest(workflows: WorkflowInfo[]): string {
 	const imports = workflows
-		.map((w, i) => {
+		.map((w) => {
 			const importPath = `@/workflows/${w.filePath.replace(/\.ts$/, "")}`;
 			return `  "${w.slug}": () => import("${importPath}"),`;
 		})
@@ -302,7 +302,7 @@ if (WATCH_MODE) {
 
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-	fs.watch(WORKFLOWS_DIR, { recursive: true }, (event, filename) => {
+	fs.watch(WORKFLOWS_DIR, { recursive: true }, (_event, filename) => {
 		if (!filename?.endsWith(".ts")) return;
 
 		// Debounce rapid changes
