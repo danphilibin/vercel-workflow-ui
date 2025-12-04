@@ -10,135 +10,27 @@ The core idea: durable functions that can **pause and wait for user input**.
 import { output, waitForInput } from "@/lib/relay";
 
 export async function onboardUser() {
-  "use workflow";
+	"use workflow";
 
-  await output("Welcome! Let's get you set up.");
+	await output("Welcome! Let's get you set up.");
 
-  const { name, email, newsletter } = await waitForInput("user-info", {
-    name: { type: "text", label: "Your name" },
-    email: { type: "text", label: "Email address" },
-    newsletter: { type: "checkbox", label: "Subscribe to updates?" },
-  });
+	const { name, email, newsletter } = await waitForInput("user-info", {
+		name: { type: "text", label: "Your name" },
+		email: { type: "text", label: "Email address" },
+		newsletter: { type: "checkbox", label: "Subscribe to updates?" },
+	});
 
-  await output(`Thanks, ${name}! Check ${email} for next steps.`);
+	await output(`Thanks, ${name}! Check ${email} for next steps.`);
 
-  if (newsletter) {
-    // subscribe to newsletter...
-  }
+	if (newsletter) {
+		// subscribe to newsletter...
+	}
 
-  return { name, email, newsletter };
+	return { name, email, newsletter };
 }
 ```
 
 The workflow **streams** output to the browser in real-time and **pauses** at `waitForInput()` until the user submits the form. No polling, no external message queues—just HTTP streaming and webhooks.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         Browser                              │
-│                                                              │
-│  1. Click workflow → POST /api/run                          │
-│  2. Read streaming response (chunked HTTP)                  │
-│  3. Render output messages + input forms                    │
-│  4. Submit input → POST directly to webhook URL             │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Vercel (Next.js)                        │
-│                                                              │
-│  /api/run                    Workflow                        │
-│  ┌──────────────┐           ┌──────────────────────────┐    │
-│  │ start(wf)    │           │ output()                 │    │
-│  │ return       │◄──stream──│   → getWritable()        │    │
-│  │ run.readable │           │                          │    │
-│  └──────────────┘           │ waitForInput()           │    │
-│                             │   → getWritable() +      │    │
-│  /.well-known/workflow/     │     createWebhook()      │    │
-│  └─► webhook endpoint ──────┼─► await webhook          │    │
-│                             │   → resume & continue    │    │
-│                             └──────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Key Insight: No Intermediate Server
-
-Traditional approach (our earlier "spike"):
-```
-Workflow → POST → Relay Server → WebSocket → Browser
-Browser → WebSocket → Relay Server → POST webhook → Workflow
-```
-
-This prototype:
-```
-Workflow → stream → Browser
-Browser → POST webhook → Workflow
-```
-
-Vercel Workflows' `getWritable()` lets workflows stream directly to HTTP responses. Combined with `createWebhook()` for input, we get bidirectional communication with **zero infrastructure**.
-
-## Project Structure
-
-```
-relay-nextjs/
-├── app/
-│   ├── page.tsx           # React UI (sidebar + messages + forms)
-│   └── api/
-│       └── run/route.ts   # Start workflow, return stream
-├── lib/
-│   ├── relay.ts           # SDK: output() + waitForInput()
-│   └── relay-types.ts     # Shared types (client-safe)
-├── workflows/
-│   ├── index.ts           # Workflow registry (server)
-│   ├── manifest.ts        # Workflow names (client-safe)
-│   └── hello-relay.ts     # Example workflow
-└── docs/
-    └── ABOUT.md           # You are here
-```
-
-## The SDK (~100 lines)
-
-The entire Relay SDK for Vercel Workflows is remarkably small:
-
-**`output(content)`** - Write a message to the stream
-```typescript
-export async function output(content: string) {
-  "use step";
-  const writable = getWritable<StreamMessage>();
-  const writer = writable.getWriter();
-  await writer.write({ type: "output", content });
-  writer.releaseLock();
-}
-```
-
-**`waitForInput(stepId, schema)`** - Pause for user input
-```typescript
-export async function waitForInput(stepId, schema) {
-  const webhook = createWebhook({ respondWith: Response.json({ received: true }) });
-
-  // Stream input request to client (includes webhook URL)
-  await streamInputRequest(stepId, inputs, webhook.url);
-
-  // Workflow pauses here until webhook is called
-  const request = await webhook;
-  const { values } = await request.json();
-  return values;
-}
-```
-
-The magic is that `webhook.url` is included in the streamed message, so the browser knows exactly where to POST the user's input.
-
-## Input Types
-
-Currently supported:
-
-| Type | Schema | Returns |
-|------|--------|---------|
-| Text | `{ type: "text", label: "..." }` | `string` |
-| Checkbox | `{ type: "checkbox", label: "..." }` | `boolean` |
-
-Adding more (select, textarea, etc.) is straightforward—just update the schema types and client rendering.
 
 ## API Ergonomics
 
@@ -153,8 +45,8 @@ const name = await waitForInput("get-name", "What's your name?");
 
 // Multiple inputs with schema
 const { name, color } = await waitForInput("user-info", {
-  name: { type: "text", label: "Your name" },
-  color: { type: "text", label: "Favorite color" },
+	name: { type: "text", label: "Your name" },
+	color: { type: "text", label: "Favorite color" },
 });
 ```
 
@@ -189,23 +81,6 @@ Vercel's `createWebhook()` is perfect for "wait for external event":
 - Caller can include arbitrary payload
 - Built-in timeout handling
 
-### The Transform Stream Pattern
-
-`run.readable` streams objects, but HTTP needs bytes:
-
-```typescript
-const jsonStream = run.readable.pipeThrough(
-  new TransformStream({
-    transform(chunk, controller) {
-      const json = JSON.stringify(chunk) + "\n";
-      controller.enqueue(encoder.encode(json));
-    },
-  }),
-);
-```
-
-This converts objects to newline-delimited JSON, which the browser parses incrementally.
-
 ## Running Locally
 
 ```bash
@@ -228,4 +103,3 @@ Click a workflow in the sidebar to run it. Messages stream in real-time, forms a
 - [ ] Auth layer for production
 - [ ] Deploy to Vercel and test cold starts
 - [ ] Compare latency with other durable workflow platforms
-
