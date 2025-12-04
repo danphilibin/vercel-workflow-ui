@@ -19,9 +19,34 @@ export type {
 } from "./types";
 
 /**
- * Send output text to the Relay UI
+ * Send output to the Relay UI
+ *
+ * Text output:
+ *   await output("Hello world");
+ *
+ * Metadata table:
+ *   await output.metadata({ status: "Active", plan: "Pro" });
+ *   await output.metadata("Account Details", { status: "Active", plan: "Pro" });
  */
-export async function output(content: string) {
+async function outputText(content: string) {
 	"use step";
 	await streamWrite({ type: "output", content });
 }
+
+async function outputMetadata(
+	titleOrData: string | Record<string, string | number | boolean | null>,
+	maybeData?: Record<string, string | number | boolean | null>,
+) {
+	"use step";
+	const title = typeof titleOrData === "string" ? titleOrData : undefined;
+	const data = typeof titleOrData === "string" ? maybeData! : titleOrData;
+	await streamWrite({ type: "output", variant: "metadata", title, data });
+}
+
+type OutputFn = typeof outputText & {
+	metadata: typeof outputMetadata;
+};
+
+export const output: OutputFn = Object.assign(outputText, {
+	metadata: outputMetadata,
+});

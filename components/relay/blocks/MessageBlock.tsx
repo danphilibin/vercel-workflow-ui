@@ -12,7 +12,7 @@ export function MessageBlock({
 	onSubmit: (values: Record<string, string | boolean>) => void;
 }) {
 	if (message.type === "output") {
-		return <OutputBlock content={message.content} />;
+		return <OutputBlock message={message} />;
 	}
 
 	if (message.type === "system") {

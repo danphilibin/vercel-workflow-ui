@@ -33,7 +33,15 @@ export type CompleteFn = (message: string) => void;
 /**
  * Stream message types (wire format)
  */
-export type OutputMessage = { type: "output"; content: string };
+export type TextOutputMessage = { type: "output"; variant?: "text"; content: string };
+export type MetadataOutputMessage = {
+	type: "output";
+	variant: "metadata";
+	title?: string;
+	data: Record<string, string | number | boolean | null>;
+};
+
+export type OutputMessage = TextOutputMessage | MetadataOutputMessage;
 
 export type InputMessageBase = {
 	type: "input";

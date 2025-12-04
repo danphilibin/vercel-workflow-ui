@@ -88,15 +88,13 @@ export async function workflow() {
 		);
 
 		// Summary
-		await output(`📋 Ticket Summary`);
-		await output(`ID: ${ticketId}`);
-		await output(`Category: ${category}`);
-		await output(`Priority: ${priority}${urgent ? " (urgent)" : ""}`);
-		await output(`Issue: ${description}`);
-
-		if (emailUpdates) {
-			await output(`📧 Updates will be sent to ${email}`);
-		}
+		await output.metadata("Ticket Summary", {
+			ID: ticketId,
+			Category: category,
+			Priority: urgent ? `${priority} (urgent)` : priority,
+			Issue: description,
+			"Email Updates": emailUpdates ? email : null,
+		});
 
 		await output(
 			"Our team typically responds within 2-4 hours. Thanks for your patience!",
