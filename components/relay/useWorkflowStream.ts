@@ -6,15 +6,24 @@ import type { Message } from "./types";
 
 export type { Message } from "./types";
 
+export type WorkflowStatus =
+	| "idle"
+	| "connecting"
+	| "streaming"
+	| "complete"
+	| "error";
+
 export function useWorkflowStream() {
 	const [messages, setMessages] = useState<Message[]>([]);
+	const [status, setStatus] = useState<WorkflowStatus>("idle");
 	const abortRef = useRef<AbortController | null>(null);
 
 	const runWorkflow = useCallback(async (name: string) => {
 		abortRef.current?.abort();
 		abortRef.current = new AbortController();
 
-		setMessages([{ type: "system", content: `Starting ${name}...` }]);
+		setMessages([]);
+		setStatus("connecting");
 
 		try {
 			const triggerResponse = await fetch("/api/run", {
@@ -25,27 +34,26 @@ export function useWorkflowStream() {
 			});
 
 			if (!triggerResponse.ok) {
-				setMessages((m) => [
-					...m,
-					{ type: "system", content: "Failed to start workflow" },
-				]);
+				setStatus("error");
+				setMessages([{ type: "system", content: "Failed to start workflow" }]);
 				return;
 			}
 
 			const { runId } = (await triggerResponse.json()) as { runId: string };
-			setMessages((m) => [...m, { type: "system", content: "Running..." }]);
 
 			const streamResponse = await fetch(`/api/stream/${runId}`, {
 				signal: abortRef.current.signal,
 			});
 
 			if (!streamResponse.ok || !streamResponse.body) {
-				setMessages((m) => [
-					...m,
+				setStatus("error");
+				setMessages([
 					{ type: "system", content: "Failed to connect to stream" },
 				]);
 				return;
 			}
+
+			setStatus("streaming");
 
 			const reader = streamResponse.body.getReader();
 			const decoder = new TextDecoder();
@@ -70,9 +78,10 @@ export function useWorkflowStream() {
 				}
 			}
 
-			setMessages((m) => [...m, { type: "system", content: "Complete" }]);
+			setStatus("complete");
 		} catch (err) {
 			if ((err as Error).name !== "AbortError") {
+				setStatus("error");
 				setMessages((m) => [
 					...m,
 					{ type: "system", content: `Error: ${(err as Error).message}` },
@@ -108,7 +117,7 @@ export function useWorkflowStream() {
 		[],
 	);
 
-	return { messages, runWorkflow, submitInput };
+	return { messages, status, runWorkflow, submitInput };
 }
 
 function handleStreamMessage(
