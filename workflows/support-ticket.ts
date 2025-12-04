@@ -29,8 +29,9 @@ export async function workflow() {
 
 	const { category, description } = await waitForInput("issue-details", {
 		category: {
-			type: "text",
-			label: "Category (billing, technical, account, other)",
+			type: "select",
+			label: "Category",
+			options: ["Billing", "Technical", "Account", "Other"],
 		},
 		description: { type: "text", label: "Describe your issue" },
 	});
@@ -60,7 +61,11 @@ export async function workflow() {
 		const { priority, urgent, emailUpdates } = await waitForInput(
 			"ticket-options",
 			{
-				priority: { type: "text", label: "Priority (low, medium, high)" },
+				priority: {
+					type: "select",
+					label: "Priority",
+					options: ["Low", "Medium", "High"],
+				},
 				urgent: { type: "checkbox", label: "This is blocking my work" },
 				emailUpdates: { type: "checkbox", label: "Email me updates" },
 			},

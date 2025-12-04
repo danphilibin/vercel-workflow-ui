@@ -6,7 +6,7 @@
 
 import { inputHook } from "./hooks";
 import { streamWrite } from "./stream";
-import type { InputSchema, CheckboxInput } from "./types";
+import type { CheckboxInput, InputSchema, SelectInput } from "./types";
 import { slugify } from "./utils";
 
 /**
@@ -78,6 +78,9 @@ export async function waitForInput(
 		name,
 		type: field.type,
 		label: field.label,
+		...((field as SelectInput).options && {
+			options: (field as SelectInput).options,
+		}),
 	}));
 
 	const token = `${stepId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

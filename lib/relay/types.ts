@@ -10,8 +10,13 @@
  */
 export type TextInput = { type: "text"; label: string };
 export type CheckboxInput = { type: "checkbox"; label: string };
+export type SelectInput = {
+	type: "select";
+	label: string;
+	options: Array<string | { value: string; label: string }>;
+};
 
-export type InputField = TextInput | CheckboxInput;
+export type InputField = TextInput | CheckboxInput | SelectInput;
 
 export type InputSchema = Record<string, InputField>;
 
@@ -33,7 +38,12 @@ export type OutputMessage = { type: "output"; content: string };
 export type InputMessageBase = {
 	type: "input";
 	stepId: string;
-	inputs: Array<{ name: string; type: string; label: string }>;
+	inputs: Array<{
+		name: string;
+		type: string;
+		label: string;
+		options?: Array<string | { value: string; label: string }>;
+	}>;
 	token: string;
 };
 

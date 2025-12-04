@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 
+type InputDef = {
+	name: string;
+	type: string;
+	label: string;
+	options?: Array<string | { value: string; label: string }>;
+};
+
 export function InputBlock({
 	inputs,
 	submitted,
 	submittedValues,
 	onSubmit,
 }: {
-	inputs: Array<{ name: string; type: string; label: string }>;
+	inputs: Array<InputDef>;
 	submitted?: boolean;
 	submittedValues?: Record<string, string | boolean>;
 	onSubmit: (values: Record<string, string | boolean>) => void;
@@ -16,7 +23,15 @@ export function InputBlock({
 	const [values, setValues] = useState<Record<string, string | boolean>>(() => {
 		const initial: Record<string, string | boolean> = {};
 		for (const input of inputs) {
-			initial[input.name] = input.type === "checkbox" ? false : "";
+			if (input.type === "checkbox") {
+				initial[input.name] = false;
+			} else if (input.type === "select" && input.options?.length) {
+				const firstOption = input.options[0];
+				initial[input.name] =
+					typeof firstOption === "string" ? firstOption : firstOption.value;
+			} else {
+				initial[input.name] = "";
+			}
 		}
 		return initial;
 	});
@@ -26,6 +41,7 @@ export function InputBlock({
 		const allFilled = inputs.every(
 			(input) =>
 				input.type === "checkbox" ||
+				input.type === "select" ||
 				(typeof values[input.name] === "string" &&
 					(values[input.name] as string).trim() !== ""),
 		);
@@ -66,6 +82,40 @@ export function InputBlock({
 									{input.label}
 								</span>
 							</div>
+						) : input.type === "select" ? (
+							<>
+								<span className="text-base font-medium text-[#fafafa]">
+									{input.label}
+								</span>
+								<select
+									value={
+										(submitted
+											? submittedValues?.[input.name]
+											: values[input.name]) as string
+									}
+									onChange={(e) =>
+										setValues((v) => ({
+											...v,
+											[input.name]: e.target.value,
+										}))
+									}
+									disabled={submitted}
+									autoFocus={index === 0 && !submitted}
+									className="w-full px-3 py-2.5 text-base bg-black border border-[#333] rounded-md text-[#fafafa] focus:outline-none focus:border-[#888] focus:ring-[3px] focus:ring-white/5 disabled:bg-[#0a0a0a] disabled:border-[#222] disabled:text-[#888] transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMS41TDYgNi41TDExIDEuNSIgc3Ryb2tlPSIjODg4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+')] bg-no-repeat bg-position-[right_12px_center]"
+								>
+									{input.options?.map((option) => {
+										const value =
+											typeof option === "string" ? option : option.value;
+										const label =
+											typeof option === "string" ? option : option.label;
+										return (
+											<option key={value} value={value}>
+												{label}
+											</option>
+										);
+									})}
+								</select>
+							</>
 						) : (
 							<>
 								<span className="text-base font-medium text-[#fafafa]">
