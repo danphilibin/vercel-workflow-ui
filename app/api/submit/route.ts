@@ -7,7 +7,7 @@
  * Resumes the workflow hook with the provided values.
  */
 
-import { inputHook } from "@/lib/input-hook";
+import { inputHook } from "@/lib/relay/hooks";
 
 export async function POST(request: Request) {
 	const { token, values } = (await request.json()) as {
