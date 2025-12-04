@@ -45,27 +45,24 @@ function normalizeInputParameters(
  * Wait for input from the user
  *
  * Simplest (prompt only, auto-generates stepId):
- *   const name = await waitForInput("What's your name?");
+ *   const name = await input("What's your name?");
  *
  * With explicit stepId:
- *   const name = await waitForInput("get-name", "What's your name?");
+ *   const name = await input("get-name", "What's your name?");
  *
  * Multiple inputs:
- *   const { name, color } = await waitForInput("user-info", {
+ *   const { name, color } = await input("user-info", {
  *     name: { type: "text", label: "What's your name?" },
  *     color: { type: "text", label: "Favorite color?" },
  *   });
  */
-export async function waitForInput(prompt: string): Promise<string>;
-export async function waitForInput(
-	stepId: string,
-	prompt: string,
-): Promise<string>;
-export async function waitForInput<T extends InputSchema>(
+export async function input(prompt: string): Promise<string>;
+export async function input(stepId: string, prompt: string): Promise<string>;
+export async function input<T extends InputSchema>(
 	stepId: string,
 	schema: T,
 ): Promise<{ [K in keyof T]: T[K] extends CheckboxInput ? boolean : string }>;
-export async function waitForInput(
+export async function input(
 	stepIdOrPrompt: string,
 	promptOrSchema?: string | InputSchema,
 ): Promise<string | Record<string, string | boolean>> {

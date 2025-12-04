@@ -7,14 +7,14 @@ Relay is the **UI layer for durable workflows**. It lets workflows pause for hum
 The core idea: durable functions that can **pause and wait for user input**.
 
 ```typescript
-import { output, waitForInput } from "@/lib/relay";
+import { output, input } from "@/lib/relay";
 
 export async function onboardUser() {
 	"use workflow";
 
 	await output("Welcome! Let's get you set up.");
 
-	const { name, email, newsletter } = await waitForInput("user-info", {
+	const { name, email, newsletter } = await input("user-info", {
 		name: { type: "text", label: "Your name" },
 		email: { type: "text", label: "Email address" },
 		newsletter: { type: "checkbox", label: "Subscribe to updates?" },
@@ -30,21 +30,21 @@ export async function onboardUser() {
 }
 ```
 
-The workflow **streams** output to the browser in real-time and **pauses** at `waitForInput()` until the user submits the form. No polling, no external message queues—just HTTP streaming and webhooks.
+The workflow **streams** output to the browser in real-time and **pauses** at `input()` until the user submits the form. No polling, no external message queues—just HTTP streaming and webhooks.
 
 ## API Ergonomics
 
-Three ways to call `waitForInput`:
+Three ways to call `input`:
 
 ```typescript
 // Simplest - auto-generates stepId from prompt
-const name = await waitForInput("What's your name?");
+const name = await input("What's your name?");
 
 // Explicit stepId
-const name = await waitForInput("get-name", "What's your name?");
+const name = await input("get-name", "What's your name?");
 
 // Multiple inputs with schema
-const { name, color } = await waitForInput("user-info", {
+const { name, color } = await input("user-info", {
 	name: { type: "text", label: "Your name" },
 	color: { type: "text", label: "Favorite color" },
 });

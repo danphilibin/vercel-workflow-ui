@@ -7,7 +7,7 @@
 
 import { streamWrite } from "./stream";
 
-export { waitForInput } from "./input";
+export { input } from "./input";
 export { loading } from "./loading";
 
 export type {

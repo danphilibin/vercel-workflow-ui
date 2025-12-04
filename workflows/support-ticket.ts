@@ -3,12 +3,12 @@
  *
  * A realistic support workflow that demonstrates all Relay APIs:
  * - output() for messages
- * - waitForInput() for collecting user input
+ * - input() for collecting user input
  * - loading() with progress and complete callbacks
  */
 
 import { sleep } from "workflow";
-import { loading, output, waitForInput } from "@/lib/relay";
+import { input, loading, output } from "@/lib/relay";
 import type { WorkflowMeta } from "@/lib/relay/meta";
 
 export const meta: WorkflowMeta = {
@@ -20,14 +20,14 @@ export const meta: WorkflowMeta = {
 export async function workflow() {
 	"use workflow";
 
-	const email = await waitForInput("What's the email on your account?");
+	const email = await input("What's the email on your account?");
 
 	await loading("Looking up your account...", async (_, complete) => {
 		await sleep("1.5s");
 		complete(`Found account: ${email}`);
 	});
 
-	const { category, description } = await waitForInput("issue-details", {
+	const { category, description } = await input("issue-details", {
 		category: {
 			type: "select",
 			label: "Category",
@@ -58,18 +58,15 @@ export async function workflow() {
 			"I couldn't find an existing solution. Let's create a ticket for our team.",
 		);
 
-		const { priority, urgent, emailUpdates } = await waitForInput(
-			"ticket-options",
-			{
-				priority: {
-					type: "select",
-					label: "Priority",
-					options: ["Low", "Medium", "High"],
-				},
-				urgent: { type: "checkbox", label: "This is blocking my work" },
-				emailUpdates: { type: "checkbox", label: "Email me updates" },
+		const { priority, urgent, emailUpdates } = await input("ticket-options", {
+			priority: {
+				type: "select",
+				label: "Priority",
+				options: ["Low", "Medium", "High"],
 			},
-		);
+			urgent: { type: "checkbox", label: "This is blocking my work" },
+			emailUpdates: { type: "checkbox", label: "Email me updates" },
+		});
 
 		// Create and assign ticket
 		const ticketId = await loading(

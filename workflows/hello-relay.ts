@@ -3,7 +3,7 @@
  */
 
 import { sleep } from "workflow";
-import { loading, output, waitForInput } from "@/lib/relay";
+import { input, loading, output } from "@/lib/relay";
 import type { WorkflowMeta } from "@/lib/relay/meta";
 
 export const meta: WorkflowMeta = {
@@ -14,7 +14,7 @@ export const meta: WorkflowMeta = {
 export async function workflow() {
 	"use workflow";
 
-	const name = await waitForInput("What is your name?");
+	const name = await input("What is your name?");
 
 	await loading("Looking up your profile...", async (_progress, complete) => {
 		await sleep("2s");
