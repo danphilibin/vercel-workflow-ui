@@ -7,15 +7,15 @@
 
 import { streamWrite } from "./stream";
 
-export { loading } from "./loading";
 export { waitForInput } from "./input";
+export { loading } from "./loading";
 
 export type {
-	StreamMessage,
+	CheckboxInput,
 	InputField,
 	InputSchema,
+	StreamMessage,
 	TextInput,
-	CheckboxInput,
 } from "./types";
 
 /**
