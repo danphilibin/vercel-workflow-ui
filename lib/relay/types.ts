@@ -45,7 +45,18 @@ export type MetadataOutputMessage = {
 	data: Record<string, string | number | boolean | null>;
 };
 
-export type OutputMessage = TextOutputMessage | MetadataOutputMessage;
+export type FetchableOutputMessage = {
+	type: "output";
+	variant: "fetchable";
+	title: string;
+	workflow: string;
+	loader: string;
+};
+
+export type OutputMessage =
+	| TextOutputMessage
+	| MetadataOutputMessage
+	| FetchableOutputMessage;
 
 export type InputMessageBase = {
 	type: "input";

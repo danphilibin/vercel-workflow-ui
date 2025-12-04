@@ -28,6 +28,7 @@ type WorkflowInfo = {
 	slug: string;
 	filePath: string;
 	meta: ExtractedMeta;
+	loaders: string[]; // Names of exported loaders
 };
 
 /**
@@ -96,6 +97,20 @@ function extractStringValue(block: string, key: string): string | undefined {
 	if (backMatch) return backMatch[1];
 
 	return undefined;
+}
+
+/**
+ * Extract loader export names from workflow file content
+ * Looks for: export const xxxLoader = ...
+ */
+function extractLoaders(content: string): string[] {
+	const loaderRegex = /export\s+const\s+(\w+Loader)\s*=/g;
+	const loaders: string[] = [];
+	let match: RegExpExecArray | null;
+	while ((match = loaderRegex.exec(content)) !== null) {
+		loaders.push(match[1]);
+	}
+	return loaders;
 }
 
 /**
@@ -172,6 +187,7 @@ function scanWorkflows(): WorkflowInfo[] {
 
 		const slug = fileToSlug(file);
 		const meta = extractMeta(content);
+		const loaders = extractLoaders(content);
 
 		// Use extracted title or generate from slug
 		if (!meta.title) {
@@ -182,6 +198,7 @@ function scanWorkflows(): WorkflowInfo[] {
 			slug,
 			filePath: file,
 			meta,
+			loaders,
 		});
 	}
 
@@ -211,6 +228,21 @@ function generateManifest(workflows: WorkflowInfo[]): string {
     unlisted: ${w.meta.unlisted ?? false},
     import: imports["${w.slug}"],
   },`;
+		})
+		.join("\n");
+
+	// Generate loader registry
+	const workflowsWithLoaders = workflows.filter((w) => w.loaders.length > 0);
+	const loaderEntries = workflowsWithLoaders
+		.map((w) => {
+			const importPath = `@/workflows/${w.filePath.replace(/\.ts$/, "")}`;
+			const loaderImports = w.loaders
+				.map(
+					(l) =>
+						`      "${l}": (params: unknown) => import("${importPath}").then((m) => m.${l}(params)),`,
+				)
+				.join("\n");
+			return `  "${w.slug}": {\n${loaderImports}\n  },`;
 		})
 		.join("\n");
 
@@ -255,6 +287,21 @@ export function getVisibleWorkflows(): WorkflowEntry[] {
 export const SIDEBAR_WORKFLOWS = WORKFLOWS
   .filter((w) => !w.unlisted)
   .map(({ slug, title, description }) => ({ slug, title, description }));
+
+/**
+ * Loader registry - async data fetchers exported from workflows
+ */
+// biome-ignore lint/suspicious/noExplicitAny: dynamic loader params
+export const LOADERS: Record<string, Record<string, (params: any) => Promise<unknown>>> = {
+${loaderEntries}
+};
+
+/**
+ * Get a loader by workflow slug and loader name
+ */
+export function getLoader(workflowSlug: string, loaderName: string) {
+  return LOADERS[workflowSlug]?.[loaderName];
+}
 `;
 }
 
@@ -284,7 +331,9 @@ function generate(): void {
 
 	console.log(`📦 Found ${workflows.length} workflow(s):`);
 	for (const w of workflows) {
-		console.log(`   - ${w.slug || "(root)"}: ${w.meta.title}`);
+		const loaderInfo =
+			w.loaders.length > 0 ? ` [${w.loaders.length} loader(s)]` : "";
+		console.log(`   - ${w.slug || "(root)"}: ${w.meta.title}${loaderInfo}`);
 	}
 
 	const manifest = generateManifest(workflows);

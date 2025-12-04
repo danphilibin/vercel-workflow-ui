@@ -44,10 +44,26 @@ async function outputMetadata(
 	await streamWrite({ type: "output", variant: "metadata", title, data });
 }
 
+async function outputFetchable(
+	title: string,
+	opts: { workflow: string; loader: string },
+) {
+	"use step";
+	await streamWrite({
+		type: "output",
+		variant: "fetchable",
+		title,
+		workflow: opts.workflow,
+		loader: opts.loader,
+	});
+}
+
 type OutputFn = typeof outputText & {
 	metadata: typeof outputMetadata;
+	fetchable: typeof outputFetchable;
 };
 
 export const output: OutputFn = Object.assign(outputText, {
 	metadata: outputMetadata,
+	fetchable: outputFetchable,
 });

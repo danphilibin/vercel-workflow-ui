@@ -5,11 +5,32 @@
  * - output() for messages
  * - input() for collecting user input
  * - loading() with progress and complete callbacks
+ * - loaders for async data fetching (POC)
  */
 
 import { sleep } from "workflow";
 import { input, loading, output } from "@/lib/relay";
 import type { WorkflowMeta } from "@/lib/relay/meta";
+
+/**
+ * Loader: fetchable data endpoint (POC)
+ * The generator will detect exports ending in "Loader" and register them.
+ */
+export const issuesLoader = async (params: { page?: number }) => {
+	// Simulate fetching issues - in reality this would be a DB call
+	const page = params.page ?? 0;
+	const fakeIssues = Array.from({ length: 5 }, (_, i) => ({
+		id: `ISS-${page * 5 + i + 1}`,
+		title: `Issue ${page * 5 + i + 1}`,
+		status: i % 2 === 0 ? "open" : "closed",
+	}));
+
+	return {
+		data: fakeIssues,
+		page,
+		hasMore: page < 3,
+	};
+};
 
 export const meta: WorkflowMeta = {
 	title: "Support Ticket",
@@ -19,6 +40,12 @@ export const meta: WorkflowMeta = {
 
 export async function workflow() {
 	"use workflow";
+
+	// POC: Show fetchable data from loader
+	await output.fetchable("Your Recent Issues", {
+		workflow: "support-ticket",
+		loader: "issuesLoader",
+	});
 
 	const email = await input("What's the email on your account?");
 
