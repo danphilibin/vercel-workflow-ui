@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { CheckboxInput } from "./inputs/CheckboxInput";
+import { SelectInput } from "./inputs/SelectInput";
+import { TextInput } from "./inputs/TextInput";
 
 type InputDef = {
 	name: string;
@@ -59,88 +62,50 @@ export function InputBlock({
 				{inputs.map((input, index) => (
 					<label key={input.name} className="flex flex-col gap-2">
 						{input.type === "checkbox" ? (
-							<div className="flex items-center gap-2.5 cursor-pointer py-1">
-								<input
-									type="checkbox"
-									checked={
-										(submitted
-											? submittedValues?.[input.name]
-											: values[input.name]) as boolean
-									}
-									onChange={(e) =>
-										setValues((v) => ({
-											...v,
-											[input.name]: e.target.checked,
-										}))
-									}
-									disabled={submitted}
-									className="checkbox-custom"
-								/>
-								<span
-									className={`text-base select-none ${submitted ? "opacity-70" : ""}`}
-								>
-									{input.label}
-								</span>
-							</div>
+							<CheckboxInput
+								name={input.name}
+								label={input.label}
+								value={
+									(submitted
+										? submittedValues?.[input.name]
+										: values[input.name]) as boolean
+								}
+								onChange={(checked) =>
+									setValues((v) => ({ ...v, [input.name]: checked }))
+								}
+								disabled={submitted}
+							/>
 						) : input.type === "select" ? (
-							<>
-								<span className="text-base font-medium text-[#fafafa]">
-									{input.label}
-								</span>
-								<select
-									value={
-										(submitted
-											? submittedValues?.[input.name]
-											: values[input.name]) as string
-									}
-									onChange={(e) =>
-										setValues((v) => ({
-											...v,
-											[input.name]: e.target.value,
-										}))
-									}
-									disabled={submitted}
-									autoFocus={index === 0 && !submitted}
-									className="w-full px-3 py-2.5 text-base bg-black border border-[#333] rounded-md text-[#fafafa] focus:outline-none focus:border-[#888] focus:ring-[3px] focus:ring-white/5 disabled:bg-[#0a0a0a] disabled:border-[#222] disabled:text-[#888] transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMS41TDYgNi41TDExIDEuNSIgc3Ryb2tlPSIjODg4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+')] bg-no-repeat bg-position-[right_12px_center]"
-								>
-									{input.options?.map((option) => {
-										const value =
-											typeof option === "string" ? option : option.value;
-										const label =
-											typeof option === "string" ? option : option.label;
-										return (
-											<option key={value} value={value}>
-												{label}
-											</option>
-										);
-									})}
-								</select>
-							</>
+							<SelectInput
+								name={input.name}
+								label={input.label}
+								value={
+									(submitted
+										? submittedValues?.[input.name]
+										: values[input.name]) as string
+								}
+								options={input.options || []}
+								onChange={(value) =>
+									setValues((v) => ({ ...v, [input.name]: value }))
+								}
+								disabled={submitted}
+								autoFocus={index === 0 && !submitted}
+							/>
 						) : (
-							<>
-								<span className="text-base font-medium text-[#fafafa]">
-									{input.label}
-								</span>
-								<input
-									type="text"
-									data-1p-ignore
-									value={
-										(submitted
-											? submittedValues?.[input.name]
-											: values[input.name]) as string
-									}
-									onChange={(e) =>
-										setValues((v) => ({
-											...v,
-											[input.name]: e.target.value,
-										}))
-									}
-									disabled={submitted}
-									autoFocus={index === 0 && !submitted}
-									placeholder="Type here..."
-									className="w-full px-3 py-2.5 text-base bg-black border border-[#333] rounded-md text-[#fafafa] placeholder:text-[#666] focus:outline-none focus:border-[#888] focus:ring-[3px] focus:ring-white/5 disabled:bg-[#0a0a0a] disabled:border-[#222] disabled:text-[#888] transition-all"
-								/>
-							</>
+							<TextInput
+								name={input.name}
+								label={input.label}
+								value={
+									(submitted
+										? submittedValues?.[input.name]
+										: values[input.name]) as string
+								}
+								onChange={(value) =>
+									setValues((v) => ({ ...v, [input.name]: value }))
+								}
+								disabled={submitted}
+								autoFocus={index === 0 && !submitted}
+							/>
 						)}
 					</label>
 				))}
