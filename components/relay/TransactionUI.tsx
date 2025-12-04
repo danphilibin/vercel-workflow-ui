@@ -2,17 +2,19 @@
 
 import { useEffect } from "react";
 import { MessageBlock } from "./blocks";
+import { useAutoScroll } from "./hooks/useAutoScroll";
 import { useWorkflowStream } from "./useWorkflowStream";
 
 export function TransactionUI({ workflow }: { workflow: string }) {
 	const { messages, status, runWorkflow, submitInput } = useWorkflowStream();
+	const { containerRef } = useAutoScroll(messages);
 
 	useEffect(() => {
 		runWorkflow(workflow);
 	}, [workflow, runWorkflow]);
 
 	return (
-		<div className="flex-1 overflow-y-auto">
+		<div ref={containerRef} className="flex-1 overflow-y-auto">
 			<div className="max-w-[640px] p-8">
 				{status === "connecting" && (
 					<div className="py-3 text-base text-[#666] flex items-center gap-2">
