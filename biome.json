@@ -15,7 +15,16 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"a11y": {
+				"noAutofocus": "off"
+			},
+			"style": {
+				"useTemplate": "off"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "off"
+			}
 		}
 	},
 	"javascript": {

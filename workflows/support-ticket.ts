@@ -40,7 +40,7 @@ export async function supportTicket() {
 		"billing-faq",
 		"account-settings",
 	];
-	let foundSolution = false;
+	const foundSolution = false;
 
 	await loading("Searching knowledge base...", async (progress, complete) => {
 		for (let i = 0; i < kbArticles.length; i++) {

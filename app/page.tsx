@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { WORKFLOW_NAMES } from "@/workflows/manifest";
 import {
-	useWorkflowStream,
 	type Message,
+	useWorkflowStream,
 } from "@/components/relay/useWorkflowStream";
+import { WORKFLOW_NAMES } from "@/workflows/manifest";
 
 export default function Home() {
 	const { messages, runWorkflow, submitInput } = useWorkflowStream();

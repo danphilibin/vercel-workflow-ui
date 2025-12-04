@@ -2,8 +2,8 @@
  * Hello Relay - Example workflow using the Relay SDK
  */
 
-import { loading, output, waitForInput } from "@/lib/relay";
 import { sleep } from "workflow";
+import { loading, output, waitForInput } from "@/lib/relay";
 
 export async function spikeWorkflow() {
 	"use workflow";
@@ -13,7 +13,7 @@ export async function spikeWorkflow() {
 	await output(`Hello, ${name}!`);
 
 	// Loading with completion message (stays visible)
-	await loading("Looking up your profile...", async (progress, complete) => {
+	await loading("Looking up your profile...", async (_progress, complete) => {
 		await sleep("2s");
 		complete("Profile found!");
 	});
