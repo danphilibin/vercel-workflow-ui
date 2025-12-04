@@ -2,7 +2,8 @@
  * Hello Relay - Example workflow using the Relay SDK
  */
 
-import { output, waitForInput } from "@/lib/relay";
+import { loading, output, waitForInput } from "@/lib/relay";
+import { sleep } from "workflow";
 
 export async function spikeWorkflow() {
 	"use workflow";
@@ -11,6 +12,12 @@ export async function spikeWorkflow() {
 
 	await output(`Hello, ${name}!`);
 
+	// Loading with completion message (stays visible)
+	await loading("Looking up your profile...", async (progress, complete) => {
+		await sleep("2s");
+		complete("Profile found!");
+	});
+
 	const { food, color, newsletter } = await waitForInput("favorites", {
 		food: { type: "text", label: "Favorite food?" },
 		color: { type: "text", label: "Favorite color?" },
@@ -18,6 +25,16 @@ export async function spikeWorkflow() {
 	});
 
 	await output(`${food}? Delicious! And ${color} is a great choice.`);
+
+	// Progress loading with numeric updates
+	const items = ["Validating preferences", "Updating database", "Sending confirmation"];
+	await loading("Saving your choices...", async (progress) => {
+		for (let i = 0; i < items.length; i++) {
+			await sleep("1s");
+			await progress(i + 1, items.length);
+		}
+	});
+
 	await output(
 		newsletter ? "Thanks for subscribing!" : "No newsletter? No problem.",
 	);

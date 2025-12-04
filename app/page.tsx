@@ -14,6 +14,14 @@ type Message =
 			token: string;
 			submitted?: boolean;
 			values?: Record<string, string | boolean>;
+	  }
+	| {
+			type: "loading";
+			id: string;
+			message: string;
+			current?: number;
+			total?: number;
+			completed?: boolean;
 	  };
 
 export default function Home() {
@@ -78,7 +86,38 @@ export default function Home() {
 					if (!line.trim()) continue;
 					try {
 						const msg = JSON.parse(line) as StreamMessage;
-						setMessages((m) => [...m, msg]);
+						
+						// Handle loading state messages specially (update in place)
+						if (msg.type === "loading-start") {
+							setMessages((m) => [
+								...m,
+								{ type: "loading", id: msg.id, message: msg.message, total: msg.total },
+							]);
+						} else if (msg.type === "loading-progress") {
+							setMessages((m) =>
+								m.map((item) =>
+									item.type === "loading" && item.id === msg.id
+										? { ...item, current: msg.current, total: msg.total ?? item.total, message: msg.message ?? item.message }
+										: item
+								)
+							);
+						} else if (msg.type === "loading-end") {
+							if (msg.message) {
+								// Has completion message - mark as completed with new message
+								setMessages((m) =>
+									m.map((item) =>
+										item.type === "loading" && item.id === msg.id
+											? { ...item, message: msg.message!, completed: true }
+											: item
+									)
+								);
+							} else {
+								// No completion message - remove the element
+								setMessages((m) => m.filter((item) => !(item.type === "loading" && item.id === msg.id)));
+							}
+						} else {
+							setMessages((m) => [...m, msg]);
+						}
 					} catch {
 						console.warn("Failed to parse:", line);
 					}
@@ -212,7 +251,88 @@ function MessageBlock({
 		);
 	}
 
+	if (message.type === "loading") {
+		return (
+			<LoadingBlock
+				message={message.message}
+				current={message.current}
+				total={message.total}
+				completed={message.completed}
+			/>
+		);
+	}
+
 	return null;
+}
+
+function LoadingBlock({
+	message,
+	current,
+	total,
+	completed,
+}: {
+	message: string;
+	current?: number;
+	total?: number;
+	completed?: boolean;
+}) {
+	const hasProgress = current !== undefined && total !== undefined && !completed;
+	const percent = hasProgress ? Math.round((current / total) * 100) : null;
+
+	return (
+		<div className={`my-4 p-4 rounded-xl border ${completed ? "border-[#1a3a1a] bg-[#0a150a]" : "border-[#222] bg-[#0a0a0a]"}`}>
+			<div className="flex items-center gap-3">
+				<div className="relative w-5 h-5">
+					{completed ? (
+						<svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none">
+							<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="opacity-30" />
+							<path
+								d="M8 12l3 3 5-6"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+					) : (
+						<svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+							<circle
+								className="opacity-20"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								strokeWidth="3"
+							/>
+							<path
+								className="opacity-80"
+								d="M12 2a10 10 0 0 1 10 10"
+								stroke="currentColor"
+								strokeWidth="3"
+								strokeLinecap="round"
+							/>
+						</svg>
+					)}
+				</div>
+				<div className="flex-1 min-w-0">
+					<div className={`text-base ${completed ? "text-green-500/90" : "text-[#888]"}`}>{message}</div>
+					{hasProgress && (
+						<div className="mt-2 flex items-center gap-3">
+							<div className="flex-1 h-1.5 bg-[#222] rounded-full overflow-hidden">
+								<div
+									className="h-full bg-white/70 rounded-full transition-all duration-300 ease-out"
+									style={{ width: `${percent}%` }}
+								/>
+							</div>
+							<span className="text-sm text-[#666] tabular-nums">
+								{current}/{total}
+							</span>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
 }
 
 function InputBlock({
