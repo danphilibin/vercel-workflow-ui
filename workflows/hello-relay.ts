@@ -27,7 +27,11 @@ export async function spikeWorkflow() {
 	await output(`${food}? Delicious! And ${color} is a great choice.`);
 
 	// Progress loading with numeric updates
-	const items = ["Validating preferences", "Updating database", "Sending confirmation"];
+	const items = [
+		"Validating preferences",
+		"Updating database",
+		"Sending confirmation",
+	];
 	await loading("Saving your choices...", async (progress) => {
 		for (let i = 0; i < items.length; i++) {
 			await sleep("1s");

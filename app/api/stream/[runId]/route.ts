@@ -23,7 +23,9 @@ export async function GET(
 		? parseInt(startIndexParam, 10)
 		: undefined;
 
-	console.log(`📡 Streaming run: ${runId}${startIndex !== undefined ? ` from index ${startIndex}` : ""}`);
+	console.log(
+		`📡 Streaming run: ${runId}${startIndex !== undefined ? ` from index ${startIndex}` : ""}`,
+	);
 
 	try {
 		const run = getRun(runId);
@@ -55,4 +57,3 @@ export async function GET(
 		);
 	}
 }
-

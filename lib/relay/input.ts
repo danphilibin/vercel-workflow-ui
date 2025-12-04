@@ -69,7 +69,10 @@ export async function waitForInput(
 	stepIdOrPrompt: string,
 	promptOrSchema?: string | InputSchema,
 ): Promise<string | Record<string, string | boolean>> {
-	const { stepId, schema, wasStringPrompt } = normalizeInputParameters(stepIdOrPrompt, promptOrSchema);
+	const { stepId, schema, wasStringPrompt } = normalizeInputParameters(
+		stepIdOrPrompt,
+		promptOrSchema,
+	);
 
 	const inputs = Object.entries(schema).map(([name, field]) => ({
 		name,
@@ -100,4 +103,3 @@ async function streamInputRequest(
 	"use step";
 	await streamWrite({ type: "input", stepId, inputs, token });
 }
-

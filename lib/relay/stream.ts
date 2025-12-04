@@ -18,4 +18,3 @@ export async function streamWrite(message: StreamMessage): Promise<void> {
 	await writer.write(message);
 	writer.releaseLock();
 }
-

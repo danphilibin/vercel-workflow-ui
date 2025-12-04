@@ -14,4 +14,3 @@ export function slugify(text: string): string {
 		.replace(/^-|-$/g, "")
 		.slice(0, 50);
 }
-

@@ -19,4 +19,3 @@ const inputSchema = z.object({
 export const inputHook = defineHook<InputPayload>({
 	schema: inputSchema,
 });
-

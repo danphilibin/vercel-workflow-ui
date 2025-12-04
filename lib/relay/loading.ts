@@ -90,4 +90,3 @@ async function streamLoadingEnd(id: string, message?: string) {
 	"use step";
 	await streamWrite({ type: "loading-end", id, message });
 }
-

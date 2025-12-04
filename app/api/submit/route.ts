@@ -16,10 +16,7 @@ export async function POST(request: Request) {
 	};
 
 	if (!token || !values) {
-		return Response.json(
-			{ error: "Missing token or values" },
-			{ status: 400 },
-		);
+		return Response.json({ error: "Missing token or values" }, { status: 400 });
 	}
 
 	console.log(`📤 Resuming hook with token: ${token}`);

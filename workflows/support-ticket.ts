@@ -25,14 +25,21 @@ export async function supportTicket() {
 
 	// Collect issue details
 	const { category, description } = await waitForInput("issue-details", {
-		category: { type: "text", label: "Category (billing, technical, account, other)" },
+		category: {
+			type: "text",
+			label: "Category (billing, technical, account, other)",
+		},
 		description: { type: "text", label: "Describe your issue" },
 	});
 
 	await output(`Got it — a ${category} issue.`);
 
 	// Search knowledge base
-	const kbArticles = ["connection-troubleshooting", "billing-faq", "account-settings"];
+	const kbArticles = [
+		"connection-troubleshooting",
+		"billing-faq",
+		"account-settings",
+	];
 	let foundSolution = false;
 
 	await loading("Searching knowledge base...", async (progress, complete) => {
@@ -44,27 +51,35 @@ export async function supportTicket() {
 	});
 
 	if (!foundSolution) {
-		await output("I couldn't find an existing solution. Let's create a ticket for our team.");
+		await output(
+			"I couldn't find an existing solution. Let's create a ticket for our team.",
+		);
 
 		// Collect priority and preferences
-		const { priority, urgent, emailUpdates } = await waitForInput("ticket-options", {
-			priority: { type: "text", label: "Priority (low, medium, high)" },
-			urgent: { type: "checkbox", label: "This is blocking my work" },
-			emailUpdates: { type: "checkbox", label: "Email me updates" },
-		});
+		const { priority, urgent, emailUpdates } = await waitForInput(
+			"ticket-options",
+			{
+				priority: { type: "text", label: "Priority (low, medium, high)" },
+				urgent: { type: "checkbox", label: "This is blocking my work" },
+				emailUpdates: { type: "checkbox", label: "Email me updates" },
+			},
+		);
 
 		// Create and assign ticket
-		const ticketId = await loading("Creating your ticket...", async (progress, complete) => {
-			await sleep("800ms");
-			await progress({ message: "Assigning to support team..." });
-			await sleep("800ms");
-			await progress({ message: "Setting up notifications..." });
-			await sleep("600ms");
+		const ticketId = await loading(
+			"Creating your ticket...",
+			async (progress, complete) => {
+				await sleep("800ms");
+				await progress({ message: "Assigning to support team..." });
+				await sleep("800ms");
+				await progress({ message: "Setting up notifications..." });
+				await sleep("600ms");
 
-			const id = `TKT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-			complete(`Ticket ${id} created`);
-			return id;
-		});
+				const id = `TKT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+				complete(`Ticket ${id} created`);
+				return id;
+			},
+		);
 
 		// Summary
 		await output(`📋 Ticket Summary`);
@@ -77,9 +92,18 @@ export async function supportTicket() {
 			await output(`📧 Updates will be sent to ${email}`);
 		}
 
-		await output("Our team typically responds within 2-4 hours. Thanks for your patience!");
+		await output(
+			"Our team typically responds within 2-4 hours. Thanks for your patience!",
+		);
 
-		return { ticketId, email, category, description, priority, urgent, emailUpdates };
+		return {
+			ticketId,
+			email,
+			category,
+			description,
+			priority,
+			urgent,
+			emailUpdates,
+		};
 	}
 }
-

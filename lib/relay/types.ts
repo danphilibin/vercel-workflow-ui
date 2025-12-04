@@ -37,9 +37,24 @@ export type InputMessageBase = {
 	token: string;
 };
 
-export type LoadingStartMessage = { type: "loading-start"; id: string; message: string; total?: number };
-export type LoadingProgressMessage = { type: "loading-progress"; id: string; current?: number; total?: number; message?: string };
-export type LoadingEndMessage = { type: "loading-end"; id: string; message?: string };
+export type LoadingStartMessage = {
+	type: "loading-start";
+	id: string;
+	message: string;
+	total?: number;
+};
+export type LoadingProgressMessage = {
+	type: "loading-progress";
+	id: string;
+	current?: number;
+	total?: number;
+	message?: string;
+};
+export type LoadingEndMessage = {
+	type: "loading-end";
+	id: string;
+	message?: string;
+};
 
 export type StreamMessage =
 	| OutputMessage
