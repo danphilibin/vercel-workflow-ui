@@ -16,13 +16,10 @@ export async function workflow() {
 
 	const name = await waitForInput("What is your name?");
 
-	await output(`Hello, ${name}!`);
-
-	// Loading with completion message (stays visible)
 	await loading("Looking up your profile...", async (_progress, complete) => {
 		await sleep("2s");
 		complete("Profile found!");
 	});
 
-	await output("✅ Workflow complete");
+	await output(`Hello, ${name}!`);
 }
