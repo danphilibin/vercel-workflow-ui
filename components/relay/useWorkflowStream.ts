@@ -1,33 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import type {
-	StreamMessage,
-	OutputMessage,
-	InputMessageBase,
-} from "@/lib/relay/types";
+import { useCallback, useRef, useState } from "react";
+import type { StreamMessage } from "@/lib/relay/types";
+import type { Message } from "./types";
 
-type SystemMessage = { type: "system"; content: string };
-
-type InputMessage = InputMessageBase & {
-	submitted?: boolean;
-	values?: Record<string, string | boolean>;
-};
-
-type LoadingMessage = {
-	type: "loading";
-	id: string;
-	message: string;
-	current?: number;
-	total?: number;
-	completed?: boolean;
-};
-
-export type Message =
-	| OutputMessage
-	| SystemMessage
-	| InputMessage
-	| LoadingMessage;
+export type { Message } from "./types";
 
 export function useWorkflowStream() {
 	const [messages, setMessages] = useState<Message[]>([]);
