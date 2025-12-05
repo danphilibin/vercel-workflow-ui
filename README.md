@@ -1,23 +1,39 @@
 # Relay
 
-**UI layer for durable workflows.** Relay lets workflows pause for human input, collect data in a browser, and resume execution seamlessly.
-
-Built on [Vercel Workflows](https://vercel.com/docs/workflow-kit).
-
-## What It Does
+Relay is a UI layer built on top of [Vercel Workflows](https://vercel.com/docs/workflow-kit). It lets workflows pause to `await` input from a browser and resume execution seamlessly.
 
 ```typescript
-const { name, email } = await input("user-info", {
-	name: { type: "text", label: "Your name" },
-	email: { type: "text", label: "Email address" },
-});
+import { input, loading, output } from "@/lib/relay";
 
-await output(`Thanks, ${name}!`);
+export async function createSupportTicket() {
+	"use workflow";
+
+	// Displays a text input in the browser
+	const email = await input("Enter your email address");
+
+	// Dynamic loading states
+	await loading("Looking up your profile...", async (progress, complete) => {
+		// Make API/DB calls, etc
+		complete("Profile found!");
+	});
+
+	// Supports multiple inputs per step; response object is type-safe
+	const { issue, priority } = await input("What is your issue?", {
+		issue: { type: "text", label: "Describe your issue", lines: 3 },
+		priority: { type: "select", options: ["High", "Medium", "Low"] },
+		notifyWhenResolved: { type: "boolean", label: "Notify when resolved?", defaultValue: true },
+	});
+
+	// Call your own code, etc. 
+
+	// Display output as markdown, tables, etc.
+	await output(`✅ Ticket created. **Reference number: DP-1025**`);
+}
 ```
 
-- Workflows **stream** output to the browser in real-time
-- `input()` **pauses** the workflow until the user submits
-- No polling, no WebSockets—just HTTP streaming + webhooks
+- Workflows stream UI instructions to the browser
+- `input()` pauses the workflow until the user submits
+- Built on top of [Vercel Workflows](https://vercel.com/docs/workflow-kit) for durability, resumability, etc. 
 
 ## Quick Start
 
