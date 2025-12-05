@@ -1,52 +1,48 @@
 "use client";
 
 import { useState } from "react";
+import type { InputBlock as InputBlockType } from "@/lib/relay/types";
 import { CheckboxInput } from "./inputs/CheckboxInput";
 import { SelectInput } from "./inputs/SelectInput";
 import { TextInput } from "./inputs/TextInput";
 
-type InputDef = {
-	name: string;
-	type: string;
-	label: string;
-	options?: Array<string | { value: string; label: string }>;
-};
-
 export function InputBlock({
-	inputs,
+	blocks,
 	submitted,
 	submittedValues,
 	onSubmit,
 }: {
-	inputs: Array<InputDef>;
+	blocks: Record<string, InputBlockType>;
 	submitted?: boolean;
 	submittedValues?: Record<string, string | boolean>;
 	onSubmit: (values: Record<string, string | boolean>) => void;
 }) {
 	const [values, setValues] = useState<Record<string, string | boolean>>(() => {
 		const initial: Record<string, string | boolean> = {};
-		for (const input of inputs) {
-			if (input.type === "checkbox") {
-				initial[input.name] = false;
-			} else if (input.type === "select" && input.options?.length) {
-				const firstOption = input.options[0];
-				initial[input.name] =
+		for (const [name, block] of Object.entries(blocks)) {
+			if (block.type === "checkbox") {
+				initial[name] = false;
+			} else if (block.type === "select" && block.options?.length) {
+				const firstOption = block.options[0];
+				initial[name] =
 					typeof firstOption === "string" ? firstOption : firstOption.value;
 			} else {
-				initial[input.name] = "";
+				initial[name] = "";
 			}
 		}
 		return initial;
 	});
 
+	const blockEntries = Object.entries(blocks);
+
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		const allFilled = inputs.every(
-			(input) =>
-				input.type === "checkbox" ||
-				input.type === "select" ||
-				(typeof values[input.name] === "string" &&
-					(values[input.name] as string).trim() !== ""),
+		const allFilled = blockEntries.every(
+			([name, block]) =>
+				block.type === "checkbox" ||
+				block.type === "select" ||
+				(typeof values[name] === "string" &&
+					(values[name] as string).trim() !== ""),
 		);
 		if (!allFilled) return;
 		onSubmit(values);
@@ -59,49 +55,49 @@ export function InputBlock({
 			}`}
 		>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-				{inputs.map((input, index) => (
-					<label key={input.name} className="flex flex-col gap-2">
-						{input.type === "checkbox" ? (
+				{blockEntries.map(([name, block], index) => (
+					<label key={name} className="flex flex-col gap-2">
+						{block.type === "checkbox" ? (
 							<CheckboxInput
-								name={input.name}
-								label={input.label}
+								name={name}
+								label={block.label}
 								value={
 									(submitted
-										? submittedValues?.[input.name]
-										: values[input.name]) as boolean
+										? submittedValues?.[name]
+										: values[name]) as boolean
 								}
 								onChange={(checked) =>
-									setValues((v) => ({ ...v, [input.name]: checked }))
+									setValues((v) => ({ ...v, [name]: checked }))
 								}
 								disabled={submitted}
 							/>
-						) : input.type === "select" ? (
+						) : block.type === "select" ? (
 							<SelectInput
-								name={input.name}
-								label={input.label}
+								name={name}
+								label={block.label}
 								value={
 									(submitted
-										? submittedValues?.[input.name]
-										: values[input.name]) as string
+										? submittedValues?.[name]
+										: values[name]) as string
 								}
-								options={input.options || []}
+								options={block.options || []}
 								onChange={(value) =>
-									setValues((v) => ({ ...v, [input.name]: value }))
+									setValues((v) => ({ ...v, [name]: value }))
 								}
 								disabled={submitted}
 								autoFocus={index === 0 && !submitted}
 							/>
 						) : (
 							<TextInput
-								name={input.name}
-								label={input.label}
+								name={name}
+								label={block.label}
 								value={
 									(submitted
-										? submittedValues?.[input.name]
-										: values[input.name]) as string
+										? submittedValues?.[name]
+										: values[name]) as string
 								}
 								onChange={(value) =>
-									setValues((v) => ({ ...v, [input.name]: value }))
+									setValues((v) => ({ ...v, [name]: value }))
 								}
 								disabled={submitted}
 								autoFocus={index === 0 && !submitted}

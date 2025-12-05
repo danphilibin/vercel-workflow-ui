@@ -19,10 +19,10 @@ export function MessageBlock({
 		return <SystemBlock content={message.content} />;
 	}
 
-	if (message.type === "input") {
+	if (message.type === "input-request") {
 		return (
 			<InputBlock
-				inputs={message.inputs}
+				blocks={message.blocks}
 				submitted={message.submitted}
 				submittedValues={message.values}
 				onSubmit={onSubmit}

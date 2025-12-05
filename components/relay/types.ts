@@ -4,11 +4,11 @@
  * These extend the wire format types with UI-specific state.
  */
 
-import type { InputMessageBase, OutputMessage } from "@/lib/relay/types";
+import type { InputRequestMessage, OutputMessage } from "@/lib/relay/types";
 
 export type SystemMessage = { type: "system"; content: string };
 
-export type InputMessage = InputMessageBase & {
+export type InputMessage = InputRequestMessage & {
 	submitted?: boolean;
 	values?: Record<string, string | boolean>;
 };
@@ -29,4 +29,4 @@ export type Message =
 	| LoadingMessage;
 
 // Re-export base types for convenience
-export type { InputMessageBase, OutputMessage } from "@/lib/relay/types";
+export type { InputRequestMessage, OutputMessage } from "@/lib/relay/types";

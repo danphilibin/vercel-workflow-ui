@@ -47,16 +47,23 @@ export type MetadataOutputMessage = {
 
 export type OutputMessage = TextOutputMessage | MetadataOutputMessage;
 
-export type InputMessageBase = {
-	type: "input";
+export type InputBlock = {
+	type: string;
+	label: string;
+	options?: Array<string | { value: string; label: string }>;
+};
+
+export type InputRequestMessage = {
+	type: "input-request";
 	stepId: string;
-	inputs: Array<{
-		name: string;
-		type: string;
-		label: string;
-		options?: Array<string | { value: string; label: string }>;
-	}>;
+	blocks: Record<string, InputBlock>;
 	token: string;
+};
+
+export type InputResponseMessage = {
+	type: "input-response";
+	stepId: string;
+	values: Record<string, string | boolean>;
 };
 
 export type LoadingStartMessage = {
@@ -80,7 +87,8 @@ export type LoadingEndMessage = {
 
 export type StreamMessage =
 	| OutputMessage
-	| InputMessageBase
+	| InputRequestMessage
+	| InputResponseMessage
 	| LoadingStartMessage
 	| LoadingProgressMessage
 	| LoadingEndMessage;

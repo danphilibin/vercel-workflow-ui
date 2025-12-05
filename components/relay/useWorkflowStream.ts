@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import type { StreamMessage } from "@/lib/relay/types";
 import type { Message } from "./types";
@@ -16,79 +17,97 @@ export type WorkflowStatus =
 export function useWorkflowStream() {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [status, setStatus] = useState<WorkflowStatus>("idle");
+	const [runId, setRunId] = useState<string | null>(null);
 	const abortRef = useRef<AbortController | null>(null);
+	const router = useRouter();
 
-	const runWorkflow = useCallback(async (name: string) => {
-		abortRef.current?.abort();
-		abortRef.current = new AbortController();
+	const runWorkflow = useCallback(
+		async (name: string, existingRunId?: string) => {
+			abortRef.current?.abort();
+			abortRef.current = new AbortController();
 
-		setMessages([]);
-		setStatus("connecting");
+			setMessages([]);
+			setStatus("connecting");
 
-		try {
-			const triggerResponse = await fetch("/api/run", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ workflow: name }),
-				signal: abortRef.current.signal,
-			});
+			try {
+				let currentRunId = existingRunId;
 
-			if (!triggerResponse.ok) {
-				setStatus("error");
-				setMessages([{ type: "system", content: "Failed to start workflow" }]);
-				return;
-			}
+				// Only create a new run if we don't have an existing runId
+				if (!currentRunId) {
+					const triggerResponse = await fetch("/api/run", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ workflow: name }),
+						signal: abortRef.current.signal,
+					});
 
-			const { runId } = (await triggerResponse.json()) as { runId: string };
+					if (!triggerResponse.ok) {
+						setStatus("error");
+						setMessages([
+							{ type: "system", content: "Failed to start workflow" },
+						]);
+						return;
+					}
 
-			const streamResponse = await fetch(`/api/stream/${runId}`, {
-				signal: abortRef.current.signal,
-			});
+					const result = (await triggerResponse.json()) as { runId: string };
+					currentRunId = result.runId;
 
-			if (!streamResponse.ok || !streamResponse.body) {
-				setStatus("error");
-				setMessages([
-					{ type: "system", content: "Failed to connect to stream" },
-				]);
-				return;
-			}
+					// Navigate to the URL with runId
+					router.replace(`/workflow/${name}/${currentRunId}`);
+				}
 
-			setStatus("streaming");
+				setRunId(currentRunId);
 
-			const reader = streamResponse.body.getReader();
-			const decoder = new TextDecoder();
-			let buffer = "";
+				const streamResponse = await fetch(`/api/stream/${currentRunId}`, {
+					signal: abortRef.current.signal,
+				});
 
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
+				if (!streamResponse.ok || !streamResponse.body) {
+					setStatus("error");
+					setMessages([
+						{ type: "system", content: "Failed to connect to stream" },
+					]);
+					return;
+				}
 
-				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
+				setStatus("streaming");
 
-				for (const line of lines) {
-					if (!line.trim()) continue;
-					try {
-						const msg = JSON.parse(line) as StreamMessage;
-						handleStreamMessage(msg, setMessages);
-					} catch {
-						console.warn("Failed to parse:", line);
+				const reader = streamResponse.body.getReader();
+				const decoder = new TextDecoder();
+				let buffer = "";
+
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					buffer += decoder.decode(value, { stream: true });
+					const lines = buffer.split("\n");
+					buffer = lines.pop() || "";
+
+					for (const line of lines) {
+						if (!line.trim()) continue;
+						try {
+							const msg = JSON.parse(line) as StreamMessage;
+							handleStreamMessage(msg, setMessages);
+						} catch {
+							console.warn("Failed to parse:", line);
+						}
 					}
 				}
-			}
 
-			setStatus("complete");
-		} catch (err) {
-			if ((err as Error).name !== "AbortError") {
-				setStatus("error");
-				setMessages((m) => [
-					...m,
-					{ type: "system", content: `Error: ${(err as Error).message}` },
-				]);
+				setStatus("complete");
+			} catch (err) {
+				if ((err as Error).name !== "AbortError") {
+					setStatus("error");
+					setMessages((m) => [
+						...m,
+						{ type: "system", content: `Error: ${(err as Error).message}` },
+					]);
+				}
 			}
-		}
-	}, []);
+		},
+		[router],
+	);
 
 	const submitInput = useCallback(
 		async (
@@ -98,7 +117,7 @@ export function useWorkflowStream() {
 		) => {
 			setMessages((m) =>
 				m.map((msg) =>
-					msg.type === "input" && msg.stepId === stepId
+					msg.type === "input-request" && msg.stepId === stepId
 						? { ...msg, submitted: true, values }
 						: msg,
 				),
@@ -117,7 +136,7 @@ export function useWorkflowStream() {
 		[],
 	);
 
-	return { messages, status, runWorkflow, submitInput };
+	return { messages, status, runId, runWorkflow, submitInput };
 }
 
 function handleStreamMessage(
@@ -164,6 +183,19 @@ function handleStreamMessage(
 				m.filter((item) => !(item.type === "loading" && item.id === msg.id)),
 			);
 		}
+
+		return;
+	}
+
+	// Handle input responses - mark input as submitted with values
+	if (msg.type === "input-response") {
+		setMessages((m) =>
+			m.map((item) =>
+				item.type === "input-request" && item.stepId === msg.stepId
+					? { ...item, submitted: true, values: msg.values }
+					: item,
+			),
+		);
 
 		return;
 	}
