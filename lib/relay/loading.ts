@@ -5,7 +5,12 @@
  */
 
 import { streamWrite } from "./stream";
-import type { ProgressFn, CompleteFn } from "./types";
+import type { CompleteFn, ProgressFn } from "./types";
+
+export interface LoadingContext {
+	progress: ProgressFn;
+	complete: CompleteFn;
+}
 
 /**
  * Show a loading state while executing work
@@ -16,7 +21,7 @@ import type { ProgressFn, CompleteFn } from "./types";
  *   });
  *
  * With numeric progress:
- *   await loading("Processing items...", async (progress) => {
+ *   await loading("Processing items...", async ({ progress }) => {
  *     for (let i = 0; i < items.length; i++) {
  *       await processItem(items[i]);
  *       await progress(i + 1, items.length);
@@ -24,7 +29,7 @@ import type { ProgressFn, CompleteFn } from "./types";
  *   });
  *
  * With message updates:
- *   await loading("Starting...", async (progress) => {
+ *   await loading("Starting...", async ({ progress }) => {
  *     await progress({ message: "Step 1..." });
  *     await step1();
  *     await progress({ message: "Step 2..." });
@@ -32,14 +37,14 @@ import type { ProgressFn, CompleteFn } from "./types";
  *   });
  *
  * With completion message (stays visible instead of disappearing):
- *   await loading("Looking for account...", async (progress, complete) => {
+ *   await loading("Looking for account...", async ({ complete }) => {
  *     const account = await findAccount();
  *     complete("Account found");
  *   });
  */
 export async function loading<T>(
 	message: string,
-	work: (progress: ProgressFn, complete: CompleteFn) => Promise<T>,
+	work: (ctx: LoadingContext) => Promise<T>,
 ): Promise<T> {
 	const id = await streamLoadingStart(message);
 
@@ -63,7 +68,7 @@ export async function loading<T>(
 	};
 
 	try {
-		const result = await work(progress, complete);
+		const result = await work({ progress, complete });
 		return result;
 	} finally {
 		await streamLoadingEnd(id, completeMessage);

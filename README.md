@@ -12,7 +12,7 @@ export async function createSupportTicket() {
 	const email = await input("Enter your email address");
 
 	// Dynamic loading states
-	await loading("Looking up your profile...", async (progress, complete) => {
+	await loading("Looking up your profile...", async ({ complete }) => {
 		// Make API/DB calls, etc
 		complete("Profile found!");
 	});

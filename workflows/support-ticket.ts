@@ -22,7 +22,7 @@ export async function workflow() {
 
 	const email = await input("What's the email on your account?");
 
-	await loading("Looking up your account...", async (_, complete) => {
+	await loading("Looking up your account...", async ({ complete }) => {
 		await sleep("1.5s");
 		complete(`Found account: ${email}`);
 	});
@@ -45,13 +45,16 @@ export async function workflow() {
 	];
 	const foundSolution = false;
 
-	await loading("Searching knowledge base...", async (progress, complete) => {
-		for (let i = 0; i < kbArticles.length; i++) {
-			await sleep("600ms");
-			await progress(i + 1, kbArticles.length);
-		}
-		complete("No matching articles found");
-	});
+	await loading(
+		"Searching knowledge base...",
+		async ({ progress, complete }) => {
+			for (let i = 0; i < kbArticles.length; i++) {
+				await sleep("600ms");
+				await progress(i + 1, kbArticles.length);
+			}
+			complete("No matching articles found");
+		},
+	);
 
 	if (!foundSolution) {
 		await output(
@@ -71,7 +74,7 @@ export async function workflow() {
 		// Create and assign ticket
 		const ticketId = await loading(
 			"Creating your ticket...",
-			async (progress, complete) => {
+			async ({ progress, complete }) => {
 				await sleep("800ms");
 				await progress({ message: "Assigning to support team..." });
 				await sleep("800ms");
