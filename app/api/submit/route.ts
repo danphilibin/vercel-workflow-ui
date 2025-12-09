@@ -2,17 +2,18 @@
  * Submit user input to workflow
  *
  * POST /api/submit
- * Body: { token: string, values: Record<string, string | boolean> }
+ * Body: { token: string, values: InputValues }
  *
  * Resumes the workflow hook with the provided values.
  */
 
 import { inputHook } from "@/lib/relay/hooks";
+import type { InputValues } from "@/lib/relay/types";
 
 export async function POST(request: Request) {
 	const { token, values } = (await request.json()) as {
 		token: string;
-		values: Record<string, string | boolean>;
+		values: InputValues;
 	};
 
 	if (!token || !values) {

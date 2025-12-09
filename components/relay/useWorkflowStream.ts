@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
-import type { StreamMessage } from "@/lib/relay/types";
+import type { InputValues, StreamMessage } from "@/lib/relay/types";
 import type { Message } from "./types";
 
 export type { Message } from "./types";
@@ -110,11 +110,7 @@ export function useWorkflowStream() {
 	);
 
 	const submitInput = useCallback(
-		async (
-			stepId: string,
-			token: string,
-			values: Record<string, string | boolean>,
-		) => {
+		async (stepId: string, token: string, values: InputValues) => {
 			setMessages((m) =>
 				m.map((msg) =>
 					msg.type === "input-request" && msg.stepId === stepId

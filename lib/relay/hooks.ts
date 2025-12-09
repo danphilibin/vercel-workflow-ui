@@ -7,9 +7,10 @@
 
 import { defineHook } from "workflow";
 import { z } from "zod";
+import type { InputValues } from "./types";
 
 type InputPayload = {
-	values: Record<string, string | boolean>;
+	values: InputValues;
 };
 
 const inputSchema = z.object({

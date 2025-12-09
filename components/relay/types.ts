@@ -4,13 +4,17 @@
  * These extend the wire format types with UI-specific state.
  */
 
-import type { InputRequestMessage, OutputMessage } from "@/lib/relay/types";
+import type {
+	InputRequestMessage,
+	InputValues,
+	OutputMessage,
+} from "@/lib/relay/types";
 
 export type SystemMessage = { type: "system"; content: string };
 
 export type InputMessage = InputRequestMessage & {
 	submitted?: boolean;
-	values?: Record<string, string | boolean>;
+	values?: InputValues;
 };
 
 export type LoadingMessage = {

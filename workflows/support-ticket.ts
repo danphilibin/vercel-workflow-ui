@@ -27,14 +27,22 @@ export async function workflow() {
 		complete(`Found account: ${email}`);
 	});
 
-	const { category, description } = await input("issue-details", {
-		category: {
-			type: "select",
-			label: "Category",
-			options: ["Billing", "Technical", "Account", "Other"],
+	const { category, description, stepsToReproduce } = await input(
+		"issue-details",
+		{
+			category: {
+				type: "select",
+				label: "Category",
+				options: ["Billing", "Technical", "Account", "Other"],
+			},
+			description: { type: "text", label: "Describe your issue" },
+			stepsToReproduce: {
+				type: "text",
+				label: "Steps to reproduce (if applicable)",
+				optional: true,
+			},
 		},
-		description: { type: "text", label: "Describe your issue" },
-	});
+	);
 
 	await output(`Got it — a ${category} issue.`);
 
@@ -61,15 +69,23 @@ export async function workflow() {
 			"I couldn't find an existing solution. Let's create a ticket for our team.",
 		);
 
-		const { priority, urgent, emailUpdates } = await input("ticket-options", {
-			priority: {
-				type: "select",
-				label: "Priority",
-				options: ["Low", "Medium", "High"],
+		const { priority, urgent, emailUpdates, callbackPhone } = await input(
+			"ticket-options",
+			{
+				priority: {
+					type: "select",
+					label: "Priority",
+					options: ["Low", "Medium", "High"],
+				},
+				urgent: { type: "checkbox", label: "This is blocking my work" },
+				emailUpdates: { type: "checkbox", label: "Email me updates" },
+				callbackPhone: {
+					type: "text",
+					label: "Phone number for callback",
+					optional: true,
+				},
 			},
-			urgent: { type: "checkbox", label: "This is blocking my work" },
-			emailUpdates: { type: "checkbox", label: "Email me updates" },
-		});
+		);
 
 		// Create and assign ticket
 		const ticketId = await loading(
@@ -93,7 +109,9 @@ export async function workflow() {
 			Category: category,
 			Priority: urgent ? `${priority} (urgent)` : priority,
 			Issue: description,
+			"Steps to Reproduce": stepsToReproduce ?? null,
 			"Email Updates": emailUpdates ? email : null,
+			"Callback Phone": callbackPhone ?? null,
 		});
 
 		await output(
@@ -105,9 +123,11 @@ export async function workflow() {
 			email,
 			category,
 			description,
+			stepsToReproduce,
 			priority,
 			urgent,
 			emailUpdates,
+			callbackPhone,
 		};
 	}
 }

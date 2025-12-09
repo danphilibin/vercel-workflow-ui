@@ -1,3 +1,4 @@
+import type { InputValues } from "@/lib/relay/types";
 import type { Message } from "../types";
 import { InputBlock } from "./InputBlock";
 import { LoadingBlock } from "./LoadingBlock";
@@ -9,7 +10,7 @@ export function MessageBlock({
 	onSubmit,
 }: {
 	message: Message;
-	onSubmit: (values: Record<string, string | boolean>) => void;
+	onSubmit: (values: InputValues) => void;
 }) {
 	if (message.type === "output") {
 		return <OutputBlock message={message} />;

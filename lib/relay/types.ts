@@ -8,17 +8,28 @@
 /**
  * Input field types
  */
-export type TextInput = { type: "text"; label: string };
-export type CheckboxInput = { type: "checkbox"; label: string };
+export type TextInput = { type: "text"; label: string; optional?: boolean };
+export type CheckboxInput = {
+	type: "checkbox";
+	label: string;
+	optional?: boolean;
+};
 export type SelectInput = {
 	type: "select";
 	label: string;
 	options: Array<string | { value: string; label: string }>;
+	optional?: boolean;
 };
 
 export type InputField = TextInput | CheckboxInput | SelectInput;
 
 export type InputSchema = Record<string, InputField>;
+
+/** The possible value types for a single input field */
+export type InputValue = string | boolean | undefined;
+
+/** A record of input field values keyed by field name */
+export type InputValues = Record<string, InputValue>;
 
 /**
  * Loading/progress callback types
@@ -57,7 +68,7 @@ export type InputRequestMessage = {
 export type InputResponseMessage = {
 	type: "input-response";
 	stepId: string;
-	values: Record<string, string | boolean>;
+	values: InputValues;
 };
 
 export type LoadingStartMessage = {

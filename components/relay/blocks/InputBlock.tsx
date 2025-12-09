@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { InputSchema } from "@/lib/relay/types";
+import type { InputSchema, InputValues } from "@/lib/relay/types";
 import { CheckboxInput } from "./inputs/CheckboxInput";
 import { SelectInput } from "./inputs/SelectInput";
 import { TextInput } from "./inputs/TextInput";
@@ -14,8 +14,8 @@ export function InputBlock({
 }: {
 	blocks: InputSchema;
 	submitted?: boolean;
-	submittedValues?: Record<string, string | boolean>;
-	onSubmit: (values: Record<string, string | boolean>) => void;
+	submittedValues?: InputValues;
+	onSubmit: (values: InputValues) => void;
 }) {
 	const [values, setValues] = useState<Record<string, string | boolean>>(() => {
 		const initial: Record<string, string | boolean> = {};
@@ -39,6 +39,7 @@ export function InputBlock({
 		e.preventDefault();
 		const allFilled = blockEntries.every(
 			([name, block]) =>
+				block.optional ||
 				block.type === "checkbox" ||
 				block.type === "select" ||
 				(typeof values[name] === "string" &&

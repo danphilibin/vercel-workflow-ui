@@ -6,8 +6,33 @@
 
 import { inputHook } from "./hooks";
 import { streamWrite } from "./stream";
-import type { CheckboxInput, InputSchema } from "./types";
+import type {
+	CheckboxInput,
+	InputField,
+	InputSchema,
+	InputValues,
+} from "./types";
 import { slugify } from "./utils";
+
+/**
+ * Infer the return type for a single input field.
+ * - Checkbox returns boolean, others return string
+ * - If optional: true, the type is T | undefined
+ */
+type InferFieldValue<T extends InputField> = T extends CheckboxInput
+	? T extends { optional: true }
+		? boolean | undefined
+		: boolean
+	: T extends { optional: true }
+		? string | undefined
+		: string;
+
+/**
+ * Infer the return type for an entire input schema.
+ */
+type InferInputResult<T extends InputSchema> = {
+	[K in keyof T]: InferFieldValue<T[K]>;
+};
 
 /**
  * Normalizes the overloaded function arguments into a consistent format.
@@ -61,11 +86,11 @@ export async function input(stepId: string, prompt: string): Promise<string>;
 export async function input<T extends InputSchema>(
 	stepId: string,
 	schema: T,
-): Promise<{ [K in keyof T]: T[K] extends CheckboxInput ? boolean : string }>;
+): Promise<InferInputResult<T>>;
 export async function input(
 	stepIdOrPrompt: string,
 	promptOrSchema?: string | InputSchema,
-): Promise<string | Record<string, string | boolean>> {
+): Promise<string | InputValues> {
 	const { stepId, schema, wasStringPrompt } = normalizeInputParameters(
 		stepIdOrPrompt,
 		promptOrSchema,
@@ -97,10 +122,7 @@ async function streamInputRequest(
 	await streamWrite({ type: "input-request", stepId, blocks, token });
 }
 
-async function streamInputResponse(
-	stepId: string,
-	values: Record<string, string | boolean>,
-) {
+async function streamInputResponse(stepId: string, values: InputValues) {
 	"use step";
 	await streamWrite({ type: "input-response", stepId, values });
 }
