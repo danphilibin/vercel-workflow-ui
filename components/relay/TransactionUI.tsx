@@ -24,7 +24,7 @@ export function TransactionUI({
 	}, [workflow, initialRunId, runWorkflow]);
 
 	return (
-		<>
+		<div className="flex h-full w-full">
 			<div ref={containerRef} className="flex-1 overflow-y-auto">
 				<div className="max-w-[640px] p-8">
 					{status === "connecting" && (
@@ -47,6 +47,6 @@ export function TransactionUI({
 				</div>
 			</div>
 			<DebugPanel messages={messages} status={status} runId={runId} />
-		</>
+		</div>
 	);
 }
