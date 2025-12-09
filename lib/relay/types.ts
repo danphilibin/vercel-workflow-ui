@@ -47,16 +47,10 @@ export type MetadataOutputMessage = {
 
 export type OutputMessage = TextOutputMessage | MetadataOutputMessage;
 
-export type InputBlock = {
-	type: string;
-	label: string;
-	options?: Array<string | { value: string; label: string }>;
-};
-
 export type InputRequestMessage = {
 	type: "input-request";
 	stepId: string;
-	blocks: Record<string, InputBlock>;
+	blocks: InputSchema;
 	token: string;
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { InputBlock as InputBlockType } from "@/lib/relay/types";
+import type { InputSchema } from "@/lib/relay/types";
 import { CheckboxInput } from "./inputs/CheckboxInput";
 import { SelectInput } from "./inputs/SelectInput";
 import { TextInput } from "./inputs/TextInput";
@@ -12,7 +12,7 @@ export function InputBlock({
 	submittedValues,
 	onSubmit,
 }: {
-	blocks: Record<string, InputBlockType>;
+	blocks: InputSchema;
 	submitted?: boolean;
 	submittedValues?: Record<string, string | boolean>;
 	onSubmit: (values: Record<string, string | boolean>) => void;
@@ -76,9 +76,7 @@ export function InputBlock({
 								name={name}
 								label={block.label}
 								value={
-									(submitted
-										? submittedValues?.[name]
-										: values[name]) as string
+									(submitted ? submittedValues?.[name] : values[name]) as string
 								}
 								options={block.options || []}
 								onChange={(value) =>
@@ -92,9 +90,7 @@ export function InputBlock({
 								name={name}
 								label={block.label}
 								value={
-									(submitted
-										? submittedValues?.[name]
-										: values[name]) as string
+									(submitted ? submittedValues?.[name] : values[name]) as string
 								}
 								onChange={(value) =>
 									setValues((v) => ({ ...v, [name]: value }))

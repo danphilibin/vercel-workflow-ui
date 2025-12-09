@@ -6,7 +6,7 @@
 
 import { inputHook } from "./hooks";
 import { streamWrite } from "./stream";
-import type { CheckboxInput, InputBlock, InputSchema } from "./types";
+import type { CheckboxInput, InputSchema } from "./types";
 import { slugify } from "./utils";
 
 /**
@@ -71,27 +71,14 @@ export async function input(
 		promptOrSchema,
 	);
 
-	// Convert InputSchema to InputBlock record (same shape, just type assertion)
-	const blocks: Record<string, InputBlock> = Object.fromEntries(
-		Object.entries(schema).map(([name, field]) => [
-			name,
-			{
-				type: field.type,
-				label: field.label,
-				...("options" in field && { options: field.options }),
-			},
-		]),
-	);
-
 	const token = `${stepId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 	const hook = inputHook.create({ token });
 
-	await streamInputRequest(stepId, blocks, token);
+	await streamInputRequest(stepId, schema, token);
 
 	const result = await hook;
 	const values = result.values;
 
-	// Stream the response so it's persisted and replayed on resume
 	await streamInputResponse(stepId, values);
 
 	if (wasStringPrompt) {
@@ -103,7 +90,7 @@ export async function input(
 
 async function streamInputRequest(
 	stepId: string,
-	blocks: Record<string, InputBlock>,
+	blocks: InputSchema,
 	token: string,
 ) {
 	"use step";
