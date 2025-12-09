@@ -32,20 +32,30 @@ export function InputBlock({
 		}
 		return initial;
 	});
+	const [errors, setErrors] = useState<Record<string, boolean>>({});
 
 	const blockEntries = Object.entries(blocks);
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		const allFilled = blockEntries.every(
-			([name, block]) =>
-				block.optional ||
-				block.type === "checkbox" ||
-				block.type === "select" ||
-				(typeof values[name] === "string" &&
-					(values[name] as string).trim() !== ""),
-		);
-		if (!allFilled) return;
+
+		const newErrors: Record<string, boolean> = {};
+		for (const [name, block] of blockEntries) {
+			const isRequired =
+				!block.optional && block.type !== "checkbox" && block.type !== "select";
+			const isEmpty =
+				typeof values[name] === "string" &&
+				(values[name] as string).trim() === "";
+			if (isRequired && isEmpty) {
+				newErrors[name] = true;
+			}
+		}
+
+		if (Object.keys(newErrors).length > 0) {
+			setErrors(newErrors);
+			return;
+		}
+
 		onSubmit(values);
 	}
 
@@ -93,11 +103,16 @@ export function InputBlock({
 								value={
 									(submitted ? submittedValues?.[name] : values[name]) as string
 								}
-								onChange={(value) =>
-									setValues((v) => ({ ...v, [name]: value }))
-								}
+								onChange={(value) => {
+									setValues((v) => ({ ...v, [name]: value }));
+									if (errors[name]) {
+										setErrors((e) => ({ ...e, [name]: false }));
+									}
+								}}
 								disabled={submitted}
 								autoFocus={index === 0 && !submitted}
+								error={errors[name]}
+								optional={block.optional}
 							/>
 						)}
 					</label>
