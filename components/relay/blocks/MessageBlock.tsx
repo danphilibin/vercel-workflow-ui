@@ -24,6 +24,7 @@ export function MessageBlock({
 		return (
 			<InputBlock
 				blocks={message.blocks}
+				buttons={message.buttons}
 				submitted={message.submitted}
 				submittedValues={message.values}
 				onSubmit={onSubmit}

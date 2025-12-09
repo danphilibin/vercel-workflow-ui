@@ -23,6 +23,19 @@ export type SelectInput = {
 
 export type InputField = TextInput | CheckboxInput | SelectInput;
 
+/**
+ * Button customization types
+ */
+export type ButtonIntent = "primary" | "secondary" | "danger";
+
+export type ButtonDef =
+	| string
+	| { label: string; intent?: ButtonIntent };
+
+export type InputOptions<B extends readonly ButtonDef[] = readonly ButtonDef[]> = {
+	buttons: B;
+};
+
 export type InputSchema = Record<string, InputField>;
 
 /** The possible value types for a single input field */
@@ -63,6 +76,7 @@ export type InputRequestMessage = {
 	stepId: string;
 	blocks: InputSchema;
 	token: string;
+	buttons?: ButtonDef[];
 };
 
 export type InputResponseMessage = {

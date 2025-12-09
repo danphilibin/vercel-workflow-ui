@@ -1,18 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import type { InputSchema, InputValues } from "@/lib/relay/types";
+import type { ButtonDef, InputSchema, InputValues } from "@/lib/relay/types";
 import { CheckboxInput } from "./inputs/CheckboxInput";
 import { SelectInput } from "./inputs/SelectInput";
 import { TextInput } from "./inputs/TextInput";
 
+function getButtonLabel(button: ButtonDef): string {
+	return typeof button === "string" ? button : button.label;
+}
+
+function getButtonIntent(button: ButtonDef): string {
+	if (typeof button === "string") return "primary";
+	return button.intent ?? "primary";
+}
+
+const buttonStyles = {
+	primary: "bg-white text-black not-disabled:hover:opacity-90",
+	secondary:
+		"bg-transparent text-white border border-[#333] not-disabled:hover:bg-[#1a1a1a]",
+	danger: "bg-red-600 text-white not-disabled:hover:bg-red-700",
+} as const;
+
 export function InputBlock({
 	blocks,
+	buttons,
 	submitted,
 	submittedValues,
 	onSubmit,
 }: {
 	blocks: InputSchema;
+	buttons?: ButtonDef[];
 	submitted?: boolean;
 	submittedValues?: InputValues;
 	onSubmit: (values: InputValues) => void;
@@ -36,9 +54,7 @@ export function InputBlock({
 
 	const blockEntries = Object.entries(blocks);
 
-	function handleSubmit(e: React.FormEvent) {
-		e.preventDefault();
-
+	function validateAndSubmit(choice?: string): boolean {
 		const newErrors: Record<string, boolean> = {};
 		for (const [name, block] of blockEntries) {
 			const isRequired =
@@ -53,10 +69,23 @@ export function InputBlock({
 
 		if (Object.keys(newErrors).length > 0) {
 			setErrors(newErrors);
-			return;
+			return false;
 		}
 
-		onSubmit(values);
+		const submitValues =
+			choice !== undefined ? { ...values, $choice: choice } : values;
+		onSubmit(submitValues);
+		return true;
+	}
+
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		validateAndSubmit();
+	}
+
+	function handleButtonClick(button: ButtonDef) {
+		const label = getButtonLabel(button);
+		validateAndSubmit(label);
 	}
 
 	return (
@@ -117,13 +146,41 @@ export function InputBlock({
 						)}
 					</label>
 				))}
-				<button
-					type="submit"
-					disabled={submitted}
-					className="self-start px-3.5 py-2 text-[15px] font-medium bg-white text-black rounded-md not-disabled:hover:opacity-90 active:scale-[0.98] disabled:bg-[#333] disabled:text-[#666] disabled:cursor-default transition-all"
-				>
-					Continue
-				</button>
+				<div className="flex gap-2">
+					{buttons && buttons.length > 0 ? (
+						buttons.map((button) => {
+							const label = getButtonLabel(button);
+							const intent = getButtonIntent(button);
+							const isSelected =
+								submitted && submittedValues?.$choice === label;
+							return (
+								<button
+									key={label}
+									type="button"
+									disabled={submitted}
+									onClick={() => handleButtonClick(button)}
+									className={`px-3.5 py-2 text-[15px] font-medium rounded-md active:scale-[0.98] disabled:cursor-default transition-all ${
+										submitted
+											? isSelected
+												? "bg-[#333] text-white"
+												: "bg-transparent text-[#666] border border-[#333]"
+											: buttonStyles[intent as keyof typeof buttonStyles]
+									}`}
+								>
+									{label}
+								</button>
+							);
+						})
+					) : (
+						<button
+							type="submit"
+							disabled={submitted}
+							className="px-3.5 py-2 text-[15px] font-medium bg-white text-black rounded-md not-disabled:hover:opacity-90 active:scale-[0.98] disabled:bg-[#333] disabled:text-[#666] disabled:cursor-default transition-all"
+						>
+							Continue
+						</button>
+					)}
+				</div>
 			</form>
 		</div>
 	);
