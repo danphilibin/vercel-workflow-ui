@@ -15,7 +15,7 @@ export function TransactionUI({
 	workflow,
 	runId: initialRunId,
 }: TransactionUIProps) {
-	const { messages, status, runId, runWorkflow, submitInput } =
+	const { messages, status, runId, runWorkflow, submitInput, submitConfirm } =
 		useWorkflowStream();
 	const { containerRef } = useAutoScroll(messages);
 
@@ -40,6 +40,11 @@ export function TransactionUI({
 							onSubmit={(values) => {
 								if (msg.type === "input-request") {
 									submitInput(msg.stepId, msg.token, values);
+								}
+							}}
+							onConfirm={(confirmed) => {
+								if (msg.type === "confirm-request") {
+									submitConfirm(msg.stepId, msg.token, confirmed);
 								}
 							}}
 						/>

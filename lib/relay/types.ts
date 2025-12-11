@@ -28,11 +28,11 @@ export type InputField = TextInput | CheckboxInput | SelectInput;
  */
 export type ButtonIntent = "primary" | "secondary" | "danger";
 
-export type ButtonDef =
-	| string
-	| { label: string; intent?: ButtonIntent };
+export type ButtonDef = string | { label: string; intent?: ButtonIntent };
 
-export type InputOptions<B extends readonly ButtonDef[] = readonly ButtonDef[]> = {
+export type InputOptions<
+	B extends readonly ButtonDef[] = readonly ButtonDef[],
+> = {
 	buttons: B;
 };
 
@@ -104,10 +104,26 @@ export type LoadingEndMessage = {
 	message?: string;
 };
 
+export type ConfirmRequestMessage = {
+	type: "confirm-request";
+	stepId: string;
+	question: string;
+	helpText?: string;
+	token: string;
+};
+
+export type ConfirmResponseMessage = {
+	type: "confirm-response";
+	stepId: string;
+	confirmed: boolean;
+};
+
 export type StreamMessage =
 	| OutputMessage
 	| InputRequestMessage
 	| InputResponseMessage
 	| LoadingStartMessage
 	| LoadingProgressMessage
-	| LoadingEndMessage;
+	| LoadingEndMessage
+	| ConfirmRequestMessage
+	| ConfirmResponseMessage;

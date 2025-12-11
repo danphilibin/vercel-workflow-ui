@@ -7,6 +7,7 @@
 
 import { streamWrite } from "./stream";
 
+export { confirm } from "./confirm";
 export { input } from "./input";
 export { loading } from "./loading";
 

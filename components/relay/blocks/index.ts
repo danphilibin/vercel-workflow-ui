@@ -1,3 +1,4 @@
+export { ConfirmBlock } from "./ConfirmBlock";
 export { InputBlock } from "./InputBlock";
 export { LoadingBlock } from "./LoadingBlock";
 export { MessageBlock } from "./MessageBlock";

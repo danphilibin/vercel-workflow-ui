@@ -132,7 +132,30 @@ export function useWorkflowStream() {
 		[],
 	);
 
-	return { messages, status, runId, runWorkflow, submitInput };
+	const submitConfirm = useCallback(
+		async (stepId: string, token: string, confirmed: boolean) => {
+			setMessages((m) =>
+				m.map((msg) =>
+					msg.type === "confirm-request" && msg.stepId === stepId
+						? { ...msg, submitted: true, confirmed }
+						: msg,
+				),
+			);
+
+			try {
+				await fetch("/api/submit", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ token, values: { $confirmed: confirmed } }),
+				});
+			} catch (err) {
+				console.error("Failed to submit confirm:", err);
+			}
+		},
+		[],
+	);
+
+	return { messages, status, runId, runWorkflow, submitInput, submitConfirm };
 }
 
 function handleStreamMessage(
@@ -189,6 +212,19 @@ function handleStreamMessage(
 			m.map((item) =>
 				item.type === "input-request" && item.stepId === msg.stepId
 					? { ...item, submitted: true, values: msg.values }
+					: item,
+			),
+		);
+
+		return;
+	}
+
+	// Handle confirm responses - mark confirm as submitted with value
+	if (msg.type === "confirm-response") {
+		setMessages((m) =>
+			m.map((item) =>
+				item.type === "confirm-request" && item.stepId === msg.stepId
+					? { ...item, submitted: true, confirmed: msg.confirmed }
 					: item,
 			),
 		);

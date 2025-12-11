@@ -5,6 +5,7 @@
  */
 
 import type {
+	ConfirmRequestMessage,
 	InputRequestMessage,
 	InputValues,
 	OutputMessage,
@@ -26,11 +27,17 @@ export type LoadingMessage = {
 	completed?: boolean;
 };
 
+export type ConfirmMessage = ConfirmRequestMessage & {
+	submitted?: boolean;
+	confirmed?: boolean;
+};
+
 export type Message =
 	| OutputMessage
 	| SystemMessage
 	| InputMessage
-	| LoadingMessage;
+	| LoadingMessage
+	| ConfirmMessage;
 
 // Re-export base types for convenience
 export type { InputRequestMessage, OutputMessage } from "@/lib/relay/types";
