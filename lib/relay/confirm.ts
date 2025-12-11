@@ -6,7 +6,7 @@
 
 import { inputHook } from "./hooks";
 import { streamWrite } from "./stream";
-import { slugify } from "./utils";
+import { generateToken, slugify } from "./utils";
 
 export type ConfirmOptions = {
 	helpText?: string;
@@ -29,7 +29,7 @@ export async function confirm(
 	options?: ConfirmOptions,
 ): Promise<boolean> {
 	const stepId = slugify(question);
-	const token = `${stepId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	const token = generateToken(stepId);
 	const hook = inputHook.create({ token });
 
 	await streamConfirmRequest(stepId, question, token, options?.helpText);

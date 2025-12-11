@@ -6,6 +6,7 @@
 
 import { streamWrite } from "./stream";
 import type { CompleteFn, ProgressFn } from "./types";
+import { generateToken } from "./utils";
 
 export interface LoadingContext {
 	progress: ProgressFn;
@@ -78,7 +79,7 @@ export async function loading<T>(
 async function streamLoadingStart(message: string): Promise<string> {
 	"use step";
 	// ID generated inside step so it's stable across workflow replays
-	const id = `loading-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	const id = generateToken("loading");
 	await streamWrite({ type: "loading-start", id, message });
 	return id;
 }

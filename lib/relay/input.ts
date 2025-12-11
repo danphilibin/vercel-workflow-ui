@@ -14,7 +14,7 @@ import type {
 	InputSchema,
 	InputValues,
 } from "./types";
-import { slugify } from "./utils";
+import { generateToken, slugify } from "./utils";
 
 /**
  * Infer the return type for a single input field.
@@ -197,7 +197,7 @@ export async function input(
 		maybeOptions,
 	);
 
-	const token = `${stepId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	const token = generateToken(stepId);
 	const hook = inputHook.create({ token });
 
 	await streamInputRequest(stepId, schema, token, buttons);
