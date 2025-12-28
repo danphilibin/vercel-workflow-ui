@@ -28,7 +28,7 @@ export function TransactionUI({
 	return (
 		<div className="flex h-full w-full">
 			<div ref={containerRef} className="flex-1 overflow-y-auto">
-				<div className="max-w-[740px] p-8">
+				<div className="max-w-[740px] p-8 mx-auto">
 					{workflowMeta && (
 						<header className="mb-8">
 							<h1 className="text-2xl font-semibold text-white">
