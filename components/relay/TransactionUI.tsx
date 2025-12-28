@@ -26,7 +26,7 @@ export function TransactionUI({
 	return (
 		<div className="flex h-full w-full">
 			<div ref={containerRef} className="flex-1 overflow-y-auto">
-				<div className="max-w-[640px] p-8">
+				<div className="max-w-[740px] p-8">
 					{status === "connecting" && (
 						<div className="py-3 text-base text-[#666] flex items-center gap-2">
 							<span className="w-1.5 h-1.5 rounded-full bg-[#666] animate-pulse-dot" />
