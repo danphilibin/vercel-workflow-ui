@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/relay/Sidebar";
+import { LayoutShell } from "@/components/relay/LayoutShell";
 import { SIDEBAR_WORKFLOWS } from "@/generated/workflows";
 
 const geistSans = Geist({
@@ -29,10 +29,7 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<div className="flex h-screen bg-black text-[#fafafa] font-sans">
-					<Sidebar workflows={SIDEBAR_WORKFLOWS} />
-					{children}
-				</div>
+				<LayoutShell workflows={SIDEBAR_WORKFLOWS}>{children}</LayoutShell>
 			</body>
 		</html>
 	);
