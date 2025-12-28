@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { getWorkflow } from "@/generated/workflows";
 import { MessageBlock } from "./blocks";
 import { DebugPanel } from "./DebugPanel";
 import { useAutoScroll } from "./hooks/useAutoScroll";
@@ -18,6 +19,7 @@ export function TransactionUI({
 	const { messages, status, runId, runWorkflow, submitInput, submitConfirm } =
 		useWorkflowStream();
 	const { containerRef } = useAutoScroll(messages);
+	const workflowMeta = useMemo(() => getWorkflow(workflow), [workflow]);
 
 	useEffect(() => {
 		runWorkflow(workflow, initialRunId);
@@ -27,6 +29,18 @@ export function TransactionUI({
 		<div className="flex h-full w-full">
 			<div ref={containerRef} className="flex-1 overflow-y-auto">
 				<div className="max-w-[740px] p-8">
+					{workflowMeta && (
+						<header className="mb-8">
+							<h1 className="text-2xl font-semibold text-white">
+								{workflowMeta.title}
+							</h1>
+							{workflowMeta.description && (
+								<p className="mt-1 text-base text-[#666]">
+									{workflowMeta.description}
+								</p>
+							)}
+						</header>
+					)}
 					{status === "connecting" && (
 						<div className="py-3 text-base text-[#666] flex items-center gap-2">
 							<span className="w-1.5 h-1.5 rounded-full bg-[#666] animate-pulse-dot" />
