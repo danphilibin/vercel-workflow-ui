@@ -11,7 +11,7 @@ interface DebugPanelProps {
 }
 
 export function DebugPanel({ messages, status, runId }: DebugPanelProps) {
-	const [isOpen, setIsOpen] = useState(true);
+	const [isOpen, setIsOpen] = useState(false);
 
 	return (
 		<>

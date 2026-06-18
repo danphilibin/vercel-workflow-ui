@@ -1,4 +1,4 @@
-import { TransactionUI } from "@/components/relay";
+import { TransactionUI } from "@/components/relay/TransactionUI";
 
 export default async function WorkflowRunPage({
 	params,

@@ -4,6 +4,7 @@ const buttonStyles = {
 	primary: "bg-white text-black not-disabled:hover:opacity-90",
 	secondary:
 		"bg-transparent text-white border border-[#333] not-disabled:hover:bg-[#1a1a1a]",
+	danger: "bg-red-600 text-white not-disabled:hover:bg-red-700",
 } as const;
 
 export function ConfirmBlock({
@@ -40,7 +41,7 @@ export function ConfirmBlock({
 								? confirmedValue === true
 									? "bg-[#333] text-white"
 									: "bg-transparent text-[#666] border border-[#333]"
-								: buttonStyles.primary
+								: buttonStyles.danger
 						}`}
 					>
 						Confirm

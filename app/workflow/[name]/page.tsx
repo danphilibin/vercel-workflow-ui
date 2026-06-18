@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { TransactionUI } from "@/components/relay";
+import { TransactionUI } from "@/components/relay/TransactionUI";
 import { getWorkflow, WORKFLOW_SLUGS } from "@/generated/workflows";
 
 export function generateStaticParams() {
